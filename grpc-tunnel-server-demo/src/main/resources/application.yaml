@@ -1,0 +1,38 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: server-service
+  profiles:
+    active: dev
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+# gRPC 服务端配置
+grpc:
+  server:
+    port: 9090
+    # 启用反射服务（可选，用于调试）
+    reflection-service-enabled: true
+    # 启用健康检查
+    health-service-enabled: true
+    # 最大消息大小
+    max-inbound-message-size: 4MB
+    # 最大元数据大小
+    max-inbound-metadata-size: 8KB
+  tunnel:
+    server:
+      thread-pool-size: 20
+      queue-capacity: 1000
+      heartbeat-check-interval: 30000
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+    org.springframework.cloud.loadbalancer: TRACE
+    reactor.netty.http.client: DEBUG

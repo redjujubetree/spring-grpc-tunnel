@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  top.redjujubetree.grpc.tunnel.server.autoconfigure.GrpcTunnelServerAutoConfiguration
