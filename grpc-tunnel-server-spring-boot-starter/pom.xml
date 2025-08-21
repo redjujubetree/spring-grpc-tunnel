@@ -7,7 +7,7 @@
     <parent>
         <groupId>top.redjujubetree</groupId>
         <artifactId>spring-grpc-tunnel</artifactId>
-        <version>0.1</version>
+        <version>0.3-RELEASE</version>
     </parent>
 
     <artifactId>grpc-tunnel-server-spring-boot-starter</artifactId>
@@ -18,12 +18,10 @@
         <dependency>
             <groupId>top.redjujubetree</groupId>
             <artifactId>grpc-tunnel-common</artifactId>
-            <version>${tunnel.project.version}</version>
         </dependency>
         <dependency>
             <groupId>net.devh</groupId>
             <artifactId>grpc-server-spring-boot-starter</artifactId>
-            <version>2.15.0.RELEASE</version>
         </dependency>
 
     </dependencies>

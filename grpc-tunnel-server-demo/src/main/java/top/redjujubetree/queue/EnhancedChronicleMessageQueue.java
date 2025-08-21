@@ -1,12 +1,12 @@
 package top.redjujubetree.queue;
 
-import cn.hutool.core.util.StrUtil;
 import lombok.Getter;
 import net.openhft.chronicle.queue.ChronicleQueue;
 import net.openhft.chronicle.queue.ExcerptAppender;
 import net.openhft.chronicle.queue.ExcerptTailer;
 import net.openhft.chronicle.queue.impl.single.SingleChronicleQueueBuilder;
 import net.openhft.chronicle.wire.DocumentContext;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -174,7 +174,7 @@ public class EnhancedChronicleMessageQueue {
                     }
                     
                     // 消费者组过滤
-                    if (StrUtil.isNotEmpty(msg.getConsumerGroup()) && 
+                    if (Strings.isNotEmpty(msg.getConsumerGroup()) &&
                         !Objects.equals(msg.getConsumerGroup(), groupId)) {
                         continue;
                     }
@@ -230,7 +230,7 @@ public class EnhancedChronicleMessageQueue {
                     }
                     
                     // 消费者组过滤
-                    if (StrUtil.isNotEmpty(msg.getConsumerGroup()) && 
+                    if (Strings.isNotEmpty(msg.getConsumerGroup()) &&
                         !Objects.equals(msg.getConsumerGroup(), consumerInfo.getGroupId())) {
                         continue;
                     }

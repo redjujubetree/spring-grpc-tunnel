@@ -1,13 +1,6 @@
 package top.redjujubetree.grpc.tunnel.client;
 
-import com.alibaba.fastjson2.JSON;
 import com.google.protobuf.ByteString;
-import top.redjujubetree.grpc.tunnel.client.config.GrpcTunnelClientProperties;
-import top.redjujubetree.grpc.tunnel.client.service.ClientInfoService;
-import top.redjujubetree.grpc.tunnel.client.service.DefaultHeartbeatService;
-import top.redjujubetree.grpc.tunnel.client.service.HeartbeatService;
-import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
-import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -16,10 +9,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
+import top.redjujubetree.grpc.tunnel.client.config.GrpcTunnelClientProperties;
+import top.redjujubetree.grpc.tunnel.client.service.ClientInfoService;
+import top.redjujubetree.grpc.tunnel.client.service.DefaultHeartbeatService;
+import top.redjujubetree.grpc.tunnel.client.service.HeartbeatService;
+import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
+import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import top.redjujubetree.grpc.tunnel.proto.GrpcTunnelServiceGrpc;
 import top.redjujubetree.grpc.tunnel.proto.MessageType;
 import top.redjujubetree.grpc.tunnel.proto.RequestPayload;
 import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
+import top.redjujubetree.grpc.tunnel.utils.JsonUtil;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -300,7 +300,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
             Object heartbeatInfo = heartbeatService.generateHeartbeat(this.getClientId());
             log.debug("Sending heartbeat: message={}", heartbeatInfo);
 
-            sendRequest("HEARTBEAT", JSON.toJSONString(heartbeatInfo));
+            sendRequest("HEARTBEAT", JsonUtil.toJson(heartbeatInfo));
         } catch (Exception e) {
             log.warn("Failed to send heartbeat: {}", e.getMessage());
             handleHeartbeatFailure();
@@ -427,7 +427,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
      */
     private boolean sendConnectionMessage() {
         try {
-            String clientPayload = JSON.toJSONString(clientInfoService.buildClentInfoPayload());
+            String clientPayload = JsonUtil.toJson(clientInfoService.buildClentInfoPayload());
             CompletableFuture<TunnelMessage> future = sendRequest("CONNECT", clientPayload, 5000);
             TunnelMessage response = future.get(6, TimeUnit.SECONDS); // Wait for connection confirmation
 
@@ -701,7 +701,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
      * Convert object to ByteString
      */
     private ByteString getByteString(Object message) {
-        String jsonString = JSON.toJSONString(message);
+        String jsonString = JsonUtil.toJson(message);
         return ByteString.copyFromUtf8(jsonString);
     }
 

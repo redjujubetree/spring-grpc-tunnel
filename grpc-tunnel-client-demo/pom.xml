@@ -6,7 +6,7 @@
     <parent>
         <groupId>top.redjujubetree</groupId>
         <artifactId>spring-grpc-tunnel</artifactId>
-        <version>0.1</version>
+        <version>0.3-RELEASE</version>
     </parent>
 
     <artifactId>grpc-tunnel-client-demo</artifactId>
@@ -39,7 +39,7 @@
         <dependency>
             <groupId>top.redjujubetree</groupId>
             <artifactId>grpc-tunnel-client-spring-boot-starter</artifactId>
-            <version>0.1</version>
+            <version>${tunnel.project.version}</version>
         </dependency>
     </dependencies>
 </project>

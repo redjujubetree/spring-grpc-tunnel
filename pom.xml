@@ -4,7 +4,7 @@
 
 	<groupId>top.redjujubetree</groupId>
 	<artifactId>spring-grpc-tunnel</artifactId>
-	<version>0.1</version>
+	<version>0.3-RELEASE</version>
 	<packaging>pom</packaging>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -44,7 +44,7 @@
 		<url>https://github.com/redjujubetree/spring-grpc-tunnel</url>
 	</scm>
 	<properties>
-		<tunnel.project.version>0.1</tunnel.project.version>
+		<tunnel.project.version>0.3-RELEASE</tunnel.project.version>
 		<lombok.version>1.18.30</lombok.version>
 		<grpc.spring-boot.version>2.15.0.RELEASE</grpc.spring-boot.version>
 		<spring-cloud.version>2021.0.9</spring-cloud.version>
@@ -62,11 +62,6 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.alibaba</groupId>
-			<artifactId>fastjson</artifactId>
-			<version>2.0.53</version>
-		</dependency>
-		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.36</version>
@@ -80,11 +75,9 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>org.springframework.cloud</groupId>
-				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>${spring-cloud.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
+				<groupId>top.redjujubetree</groupId>
+				<version>${tunnel.project.version}</version>
+				<artifactId>grpc-tunnel-common</artifactId>
 			</dependency>
 			<dependency>
 				<groupId>io.grpc</groupId>

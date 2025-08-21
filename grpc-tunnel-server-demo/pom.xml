@@ -6,7 +6,7 @@
     <parent>
         <groupId>top.redjujubetree</groupId>
         <artifactId>spring-grpc-tunnel</artifactId>
-        <version>0.1</version>
+        <version>0.3-RELEASE</version>
     </parent>
 
     <artifactId>grpc-tunnel-server-demo</artifactId>
@@ -39,19 +39,13 @@
         <dependency>
             <groupId>top.redjujubetree</groupId>
             <artifactId>grpc-tunnel-server-spring-boot-starter</artifactId>
-            <version>0.1</version>
+            <version>${tunnel.project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>net.openhft</groupId>
             <artifactId>chronicle-queue</artifactId>
             <version>5.23ea24</version>
-        </dependency>
-
-        <dependency>
-            <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
-            <version>5.8.22</version>
         </dependency>
     </dependencies>
 </project>
