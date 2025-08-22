@@ -6,24 +6,7 @@ spring:
     name: fs-client
   profiles:
     active: dev
-  datasource:
-    # url: jdbc:sqlite:/Users/kenny/IdeaProjects/file-storage-db # 创建的sqlite数据库所在路径
-    url: jdbc:sqlite:file:/Users/kenny/Library/DBeaverData/workspace6/.metadata/sample-database-sqlite-1/Chinook.db?journal_mode=WAL&busy_timeout=30000&synchronous=NORMAL&cache=shared&read_uncommitted=true
-    username: # 因为没有用户名和密码，所以这两个参数就没有值
-    password:
-    driver-class-name: org.sqlite.JDBC # sqlite驱动
-    schema: classpath:schema.sql
-    initialization-mode: always
-    hikari:
-      maximum-pool-size: 1
-      minimum-idle: 1
 
-mybatis-plus:
-  configuration:
-    map-underscore-to-camel-case: true
-  global-config:
-    db-config:
-      id-type: auto
 management:
   endpoints:
     web:

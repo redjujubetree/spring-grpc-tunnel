@@ -1,49 +1,66 @@
 package top.redjujubetree.grpc.tunnel.server;
 
-import com.alibaba.fastjson.JSON;
 import com.google.protobuf.ByteString;
+import io.grpc.stub.StreamObserver;
 import lombok.Getter;
+import net.devh.boot.grpc.server.service.GrpcService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import top.redjujubetree.grpc.tunnel.handler.HeartbeatHandler;
 import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
+import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
 import top.redjujubetree.grpc.tunnel.proto.GrpcTunnelServiceGrpc;
 import top.redjujubetree.grpc.tunnel.proto.MessageType;
 import top.redjujubetree.grpc.tunnel.proto.ResponsePayload;
 import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
 import top.redjujubetree.grpc.tunnel.server.config.GrpcTunnelServerProperties;
-import io.grpc.stub.StreamObserver;
-import net.devh.boot.grpc.server.service.GrpcService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import top.redjujubetree.grpc.tunnel.server.connection.ClientConnection;
+import top.redjujubetree.grpc.tunnel.server.connection.ConnectionManager;
+import top.redjujubetree.grpc.tunnel.server.filter.ClientRegisterFilter;
+import top.redjujubetree.grpc.tunnel.server.handler.ConnectionResult;
+import top.redjujubetree.grpc.tunnel.server.listener.ClientConnectionCloseListener;
+import top.redjujubetree.grpc.tunnel.utils.JsonUtil;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * Client Management is removed from the GrpcTunnelServerService, and now it is handled by ConnectionManager.
+ * GRPC Tunnel Server Service implementation.
+ * This service handles client connections, message processing, and heartbeat management.
+ */
 @GrpcService
 public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelServiceImplBase {
     
     private static final Logger log = LoggerFactory.getLogger(GrpcTunnelServerService.class);
     
-    private final Map<String, ClientConnection> clients = new ConcurrentHashMap<>();
+    private ConnectionManager connectionManager;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     private ScheduledFuture<?> heartbeatCheckTask;
     
     private final GrpcTunnelServerProperties properties;
+    private final List<ClientRegisterFilter> clientRegisterFilters;
+    private final List<ClientConnectionCloseListener> clientConnectionCloseListeners;
     private final List<MessageHandler> messageHandlers;
     private final HeartbeatHandler heartbeatHandler;
     
     public GrpcTunnelServerService(
             GrpcTunnelServerProperties properties,
+            List<ClientRegisterFilter> clientRegisterFilters,
+            List<ClientConnectionCloseListener> clientConnectionCloseListeners,
             List<MessageHandler> messageHandlers,
             HeartbeatHandler heartbeatHandler) {
         this.properties = properties;
+        this.clientRegisterFilters = clientRegisterFilters != null ? clientRegisterFilters : Collections.emptyList();
+        this.clientConnectionCloseListeners = Collections.emptyList(); //clientConnectionCloseListeners != null ? clientConnectionCloseListeners : Collections.emptyList();
         this.messageHandlers = messageHandlers != null ? messageHandlers : Collections.emptyList();
         this.heartbeatHandler = heartbeatHandler;
-        
-        startHeartbeatChecker();
-        log.info("GRPC Tunnel Server initialized with heartbeat timeout: {}ms", 
-            properties.getHeartbeatTimeout());
+        connectionManager = new ConnectionManager(clientConnectionCloseListeners);
     }
     
     // Default constructor to maintain backward compatibility
@@ -51,10 +68,25 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
         // Use default values or delegate to configuration
         this(
             // You might want to create a method to get default properties
-            new GrpcTunnelServerProperties(), 
+            new GrpcTunnelServerProperties(),
+            Collections.emptyList(),
+            Collections.emptyList(),
             Collections.emptyList(), 
             null
         );
+    }
+
+    @PostConstruct
+    public void init() {
+        log.info("GRPC Tunnel Server starting with properties: {}", properties);
+
+        clientRegisterFilters.sort(Comparator.comparingInt(ClientRegisterFilter::getOrder));
+        clientConnectionCloseListeners.sort(Comparator.comparingInt(ClientConnectionCloseListener::getOrder));
+        messageHandlers.sort(Comparator.comparingInt(MessageHandler::getOrder));
+
+        startHeartbeatChecker();
+
+        log.info("GRPC Tunnel Server started successfully");
     }
     
     @PreDestroy
@@ -63,17 +95,9 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
         if (heartbeatCheckTask != null) {
             heartbeatCheckTask.cancel(true);
         }
-        
         // close all client connections
-        clients.values().forEach(connection -> {
-            try {
-                connection.getObserver().onCompleted();
-            } catch (Exception e) {
-                log.error("Error closing connection for client: {}", connection.getClientId(), e);
-            }
-        });
-        clients.clear();
-        
+        connectionManager.shutdown();
+
         scheduler.shutdown();
         try {
             if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -84,7 +108,7 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
             Thread.currentThread().interrupt();
         }
         
-        log.info("GRPC Tunnel Server destroyed");
+        log.info("GRPC Tunnel Server shutdown completed");
     }
     
     /**
@@ -108,112 +132,144 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
      * check client heartbeats, if a client is inactive for too long, remove it.
      */
     private void checkClientHeartbeats() {
-        long currentTime = System.currentTimeMillis();
-        long timeout = properties.getHeartbeatTimeout();
-        
-        Iterator<Map.Entry<String, ClientConnection>> iterator = clients.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<String, ClientConnection> entry = iterator.next();
-            String clientId = entry.getKey();
-            ClientConnection connection = entry.getValue();
-            
-            long inactiveTime = currentTime - connection.getLastActivity();
-            
-            if (inactiveTime > timeout) {
-                log.warn("Client {} heartbeat timeout, inactive for {}ms", clientId, inactiveTime);
-                
-                if (heartbeatHandler != null) {
-                    try {
-                        heartbeatHandler.handleTimeout(clientId);
-                    } catch (Exception e) {
-                        log.error("Error in heartbeat handler for client: {}", clientId, e);
-                    }
-                }
-                
+        List<String> inactiveClients = connectionManager.getInactiveClients(properties.getHeartbeatTimeout());
+        for (String clientId : inactiveClients) {
+            log.warn("Client {} heartbeat timeout, so removing it", clientId);
+            if (heartbeatHandler != null) {
                 try {
-                    connection.getObserver().onCompleted();
+                    heartbeatHandler.handleTimeout(clientId);
                 } catch (Exception e) {
-                    log.error("Error closing connection for client: {}", clientId, e);
+                    log.error("Error in heartbeat handler for client: {}", clientId, e);
                 }
-                
-                // remove client
-                iterator.remove();
-                
-                log.info("Client {} removed due to heartbeat timeout", clientId);
             }
+            connectionManager.removeClient(clientId, "Heartbeat timeout");
         }
     }
-    
+
     @Override
     public StreamObserver<TunnelMessage> establishTunnel(StreamObserver<TunnelMessage> responseObserver) {
         return new StreamObserver<TunnelMessage>() {
-            private String clientId;
-            private ClientConnection connection;
-            
+            private volatile String clientId;
+            private volatile ClientConnection connection;
+            private volatile boolean isActive = true;
+
             @Override
             public void onNext(TunnelMessage message) {
+                if (!isActive) {
+                    log.warn("Received message for inactive connection: {}", clientId);
+                    return;
+                }
+
                 try {
+                    // init the client connection if not already done
                     if (clientId == null) {
-                        clientId = message.getClientId();
-                        
-                        if (clients.size() >= properties.getMaxClients()) {
-                            log.error("Max clients limit reached: {}", properties.getMaxClients());
-                            sendErrorResponse(responseObserver, message, 503, "Server at capacity");
-                            responseObserver.onCompleted();
+                        if (!initializeConnection(message, responseObserver)) {
                             return;
                         }
-                        
-                        ClientConnection existingConnection = clients.get(clientId);
-                        if (existingConnection != null) {
-                            log.warn("Client {} already connected, closing old connection", clientId);
-                            removeClient(clientId);
-                        }
-                        
-                        connection = new ClientConnection(clientId, responseObserver);
-                        clients.put(clientId, connection);
-                        log.info("Client connected: {} (Total clients: {})", clientId, clients.size());
-
-                        sendConnectionAck(responseObserver, message);
                     }
-                    
-                    connection.updateLastActivity();
-                    
-                    connection.incrementReceived();
 
-                    if (heartbeatHandler.supports(message)) {
-                        if (heartbeatHandler != null) {
-                            heartbeatHandler.handleHeartbeat(message);
-                        } else {
-                            log.warn("No heartbeat handler configured, ignoring heartbeat message for client: {}, msg: {}", clientId, JSON.toJSONString(message));
-                        }
-                        sendHeartbeatResponse(responseObserver, message);
-                        return;
-                    }
-                    // do handling of business messages
-                    handleBusinessMessage(message, responseObserver);
+                    // 更新活动时间和计数
+                    connectionManager.recordMessageReceived(clientId);
 
+                    // 处理消息
+                    processMessage(message, responseObserver);
 
                 } catch (Exception e) {
                     log.error("Error processing message from client: {}", clientId, e);
                     sendErrorResponse(responseObserver, message, 500, "Internal server error");
                 }
             }
-            
+
+            private boolean initializeConnection(TunnelMessage message,
+                                                 StreamObserver<TunnelMessage> responseObserver) {
+                clientId = message.getClientId();
+
+                // check if the client is already connected
+                if (connectionManager.getActiveConnectionCount() >= properties.getMaxClients()) {
+                    log.error("Max clients limit reached: {}", properties.getMaxClients());
+                    sendErrorResponse(responseObserver, message, 503, "Server at capacity");
+                    closeConnectionOnEstablishTunnelFailed(responseObserver);
+                    return false;
+                }
+
+                RegisterRequest registerRequest = JsonUtil.fromJson(message.getRequest().getData().toStringUtf8(), RegisterRequest.class);
+                Map<String, Object> metadata = new HashMap<>();
+                for (ClientRegisterFilter clientRegisterFilter : clientRegisterFilters) {
+                    ConnectionResult connectionResult = clientRegisterFilter.doFilter(message, registerRequest);
+                    if (!connectionResult.isAccepted()) {
+                        sendErrorResponse(responseObserver, message, 400, connectionResult.getMessage());
+                        closeConnectionOnEstablishTunnelFailed(responseObserver);
+                        return false;
+                    }
+                    if (connectionResult.getMetadata() != null && !connectionResult.getMetadata().isEmpty()) {
+                        metadata.putAll(connectionResult.getMetadata());
+                    }
+                }
+
+                // create a new connection
+                connection = new ClientConnection(clientId, responseObserver);
+                connectionManager.addClient(connection);
+                if (!metadata.isEmpty()) {
+                    connection.setMetadata(metadata);
+                }
+                // send connection acknowledgment
+                sendConnectionAck(responseObserver, message);
+
+                log.info("Client {} connected successfully", clientId);
+                return true;
+            }
+
+            private void processMessage(TunnelMessage message,
+                                        StreamObserver<TunnelMessage> responseObserver) {
+                // to handle heartbeat messages
+                if (heartbeatHandler != null && heartbeatHandler.supports(message)) {
+                    heartbeatHandler.handleHeartbeat(message);
+                    sendHeartbeatResponse(responseObserver, message);
+                    return;
+                }
+
+                // to handle business messages
+                handleBusinessMessage(message, responseObserver);
+            }
+
             @Override
             public void onError(Throwable t) {
+                if (!isActive) {
+                    return;
+                }
+
+                isActive = false;
                 log.error("Connection error for client: {}", clientId, t);
-                removeClient(clientId);
+
+                if (clientId != null) {
+                    connectionManager.removeClient(clientId, "Connection error: " + t.getMessage());
+                }
             }
-            
+
             @Override
             public void onCompleted() {
+                if (!isActive) {
+                    return;
+                }
+
+                isActive = false;
                 log.info("Client disconnected normally: {}", clientId);
-                removeClient(clientId);
-                responseObserver.onCompleted();
+
+                if (clientId != null) {
+                    connectionManager.removeClient(clientId, "Client disconnected normally");
+                }
+            }
+
+            private void closeConnectionOnEstablishTunnelFailed(StreamObserver<TunnelMessage> observer) {
+                try {
+                    observer.onCompleted();
+                } catch (Exception e) {
+                    log.debug("Error closing response observer", e);
+                }
             }
         };
     }
-    
+
     private void handleBusinessMessage(TunnelMessage message, StreamObserver<TunnelMessage> responseObserver) {
         if (messageHandlers == null || messageHandlers.isEmpty()) {
             log.warn("No message handlers configured for message type: {}", message.getRequest().getType());
@@ -221,8 +277,7 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
             return;
         }
         
-        messageHandlers.sort(Comparator.comparingInt(MessageHandler::getOrder));
-        
+
         boolean handled = false;
         for (MessageHandler handler : messageHandlers) {
             if (handler.supports(message)) {
@@ -232,7 +287,7 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
                         log.error("Handler error for message: {}", message.getMessageId(), error);
                         sendErrorResponse(responseObserver, message, 500, error.getMessage());
                     } else if (response != null) {
-                        ClientConnection conn = clients.get(message.getClientId());
+                        ClientConnection conn = connectionManager.getClient(message.getClientId());
                         if (conn != null) {
                             conn.incrementSent();
                         }
@@ -246,23 +301,6 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
         if (!handled) {
             log.warn("No handler found for message: {}, type: {}, data: {}", message.getMessageId(), message.getRequest().getType(),message.getRequest().getData().toStringUtf8());
             sendErrorResponse(responseObserver, message, 404, "No handler found for type: " + message.getRequest().getType());
-        }
-    }
-    
-    private void removeClient(String clientId) {
-        if (clientId == null) {
-            return;
-        }
-        
-        ClientConnection connection = clients.remove(clientId);
-        if (connection != null) {
-            log.info("Client removed: {} (Total clients: {})", clientId, clients.size());
-            try {
-                connection.getObserver().onCompleted();
-            } catch (Exception e) {
-                // 连接可能已经关闭
-                log.debug("Error closing connection for client: {}", clientId, e);
-            }
         }
     }
 
@@ -299,6 +337,8 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
     
     private void sendErrorResponse(StreamObserver<TunnelMessage> observer, TunnelMessage request, 
                                    int code, String message) {
+        log.info("Sending error response for request: {}, code: {}, message: {}",
+                request.getMessageId(), code, message);
         TunnelMessage response = TunnelMessage.newBuilder()
             .setMessageId(UUID.randomUUID().toString())
             .setClientId(request.getClientId())
@@ -317,15 +357,19 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
      * send a message to a specific client
      */
     public boolean sendToClient(String clientId, TunnelMessage message) {
-        ClientConnection connection = clients.get(clientId);
+        if (clientId == null || message == null) {
+            log.warn("Client ID or message is null, cannot send message");
+            return false;
+        }
+        ClientConnection connection = connectionManager.getClient(clientId);
         if (connection != null) {
             try {
-                connection.incrementSent();
                 connection.getObserver().onNext(message);
+                connectionManager.recordMessageSent(clientId);
                 return true;
             } catch (Exception e) {
                 log.error("Error sending message to client: {}", clientId, e);
-                removeClient(clientId);
+                connectionManager.removeClient(clientId, "Error sending message");
                 return false;
             }
         } else {
@@ -337,87 +381,47 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
     /**
      * send a message to all connected clients
      */
-    public void broadcast(TunnelMessage message) {
+    public int broadcast(TunnelMessage message) {
         List<String> failedClients = new ArrayList<>();
-        
-        clients.forEach((clientId, connection) -> {
-            try {
-                connection.incrementSent();
-                connection.getObserver().onNext(message);
-            } catch (Exception e) {
-                log.error("Error broadcasting to client: {}", clientId, e);
-                failedClients.add(clientId);
-            }
-        });
-        
-        failedClients.forEach(this::removeClient);
+
+        Collection<ClientConnection> allClients = connectionManager.getAllClients();
+        for (ClientConnection connection : allClients) {
+			try {
+				connection.getObserver().onNext(message);
+				connectionManager.recordMessageSent(connection.getClientId());
+			} catch (Exception e) {
+				log.error("Error broadcasting message to client: {}", connection.getClientId());
+                failedClients.add(connection.getClientId());
+			}
+		}
+        connectionManager.removeClients(failedClients, "Error broadcasting message");
+        log.info("Broadcast message sent to {} clients, failed for {} clients",
+                allClients.size() - failedClients.size(), failedClients.size());
+        return allClients.size() - failedClients.size();
     }
     
     /**
      * get all connected clients
      */
     public Set<String> getConnectedClients() {
-        return new HashSet<>(clients.keySet());
+        return connectionManager.getAllClientIds();
     }
-    
+
     public Optional<ClientConnectionInfo> getClientInfo(String clientId) {
-        ClientConnection connection = clients.get(clientId);
-        if (connection != null) {
+        Optional<ClientConnection> optional = connectionManager.getConnection(clientId);
+        if (optional.isPresent()) {
+            ClientConnection connection = optional.get();
             return Optional.of(new ClientConnectionInfo(
-                connection.getClientId(),
-                connection.getConnectedAt(),
-                connection.getLastActivity(),
-                connection.getMessagesSent(),
-                connection.getMessagesReceived()
+                    connection.getClientId(),
+                    connection.getConnectedAt(),
+                    connection.getLastActivity(),
+                    connection.getMessagesSent(),
+                    connection.getMessagesReceived()
             ));
         }
         return Optional.empty();
     }
-    
-    /**
-     * Inner class to hold client connection information
-     */
-    private static class ClientConnection {
-        private final String clientId;
-        private final StreamObserver<TunnelMessage> observer;
-        private final long connectedAt;
-        private volatile long lastActivity;
-        private final AtomicLong messagesSent;
-        private final AtomicLong messagesReceived;
-        
-        public ClientConnection(String clientId, StreamObserver<TunnelMessage> observer) {
-            this.clientId = clientId;
-            this.observer = observer;
-            this.connectedAt = System.currentTimeMillis();
-            this.lastActivity = System.currentTimeMillis();
-            this.messagesSent = new AtomicLong(0);
-            this.messagesReceived = new AtomicLong(0);
-        }
-        
-        public void updateLastActivity() {
-            this.lastActivity = System.currentTimeMillis();
-        }
-        
-        public void incrementSent() {
-            messagesSent.incrementAndGet();
-        }
-        
-        public void incrementReceived() {
-            messagesReceived.incrementAndGet();
-        }
-        
-        // getters
-        public String getClientId() { return clientId; }
-        public StreamObserver<TunnelMessage> getObserver() { return observer; }
-        public long getConnectedAt() { return connectedAt; }
-        public long getLastActivity() { return lastActivity; }
-        public long getMessagesSent() { return messagesSent.get(); }
-        public long getMessagesReceived() { return messagesReceived.get(); }
-    }
-    
-    /**
-     * Statistic info for a client connection
-     */
+
     @Getter
     public static class ClientConnectionInfo {
         private final String clientId;

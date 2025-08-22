@@ -1,6 +1,8 @@
 package top.redjujubetree.grpc.tunnel.client.service;
 
+import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
+
 public interface ClientInfoService {
 
-	Object buildClentInfoPayload();
+	RegisterRequest buildClentInfoPayload();
 }

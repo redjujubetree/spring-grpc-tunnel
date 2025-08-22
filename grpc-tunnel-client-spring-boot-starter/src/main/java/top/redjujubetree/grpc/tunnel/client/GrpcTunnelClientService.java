@@ -1,13 +1,6 @@
 package top.redjujubetree.grpc.tunnel.client;
 
-import com.alibaba.fastjson2.JSON;
 import com.google.protobuf.ByteString;
-import top.redjujubetree.grpc.tunnel.client.config.GrpcTunnelClientProperties;
-import top.redjujubetree.grpc.tunnel.client.service.ClientInfoService;
-import top.redjujubetree.grpc.tunnel.client.service.DefaultHeartbeatService;
-import top.redjujubetree.grpc.tunnel.client.service.HeartbeatService;
-import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
-import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -16,10 +9,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import top.redjujubetree.grpc.tunnel.proto.GrpcTunnelServiceGrpc;
-import top.redjujubetree.grpc.tunnel.proto.MessageType;
-import top.redjujubetree.grpc.tunnel.proto.RequestPayload;
-import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
+import top.redjujubetree.grpc.tunnel.client.config.GrpcTunnelClientProperties;
+import top.redjujubetree.grpc.tunnel.client.service.ClientInfoService;
+import top.redjujubetree.grpc.tunnel.client.service.DefaultHeartbeatService;
+import top.redjujubetree.grpc.tunnel.client.service.HeartbeatService;
+import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
+import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
+import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
+import top.redjujubetree.grpc.tunnel.proto.*;
+import top.redjujubetree.grpc.tunnel.utils.JsonUtil;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -33,7 +31,6 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
 
     private static final Logger log = LoggerFactory.getLogger(GrpcTunnelClientService.class);
     private static final int MAX_CONSECUTIVE_FAILURES = 3;
-
     // Injected dependencies
     private final ManagedChannel channel;
     private final GrpcTunnelClientProperties properties;
@@ -300,7 +297,18 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
             Object heartbeatInfo = heartbeatService.generateHeartbeat(this.getClientId());
             log.debug("Sending heartbeat: message={}", heartbeatInfo);
 
-            sendRequest("HEARTBEAT", JSON.toJSONString(heartbeatInfo));
+            CompletableFuture<TunnelMessage> future = sendRequest("HEARTBEAT", JsonUtil.toJson(heartbeatInfo));
+            future.whenComplete((response, error) -> {
+                if (error != null) {
+                    log.warn("Heartbeat send failed: {}", error.getMessage());
+                    handleHeartbeatFailure();
+                } else {
+                    ResponsePayload resp = response.getResponse();
+                    log.debug("Heartbeat response received:  code={}, message={}, data={}", resp.getCode(), resp.getMessage(), resp.getData().toStringUtf8());
+                    lastServerResponseTime.set(System.currentTimeMillis());
+                    consecutiveHeartbeatFailures = 0; // Reset failure count on success
+                }
+            });
         } catch (Exception e) {
             log.warn("Failed to send heartbeat: {}", e.getMessage());
             handleHeartbeatFailure();
@@ -368,7 +376,20 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
      * Handle server response or command message
      */
     private void handleServerMsg(TunnelMessage message) {
-        log.debug("Received message: type={}, messageId={}", message.getType(), message.getMessageId());
+        if (message == null) {
+            log.warn("Received invalid message: {}", message);
+            return;
+        }
+        if (MessageType.SERVER_RESPONSE.equals(message.getType())) {
+            log.debug("Received server response: type={}, messageId={}, correlationId={}, code={}, message={}, data={}",
+                    message.getType(), message.getMessageId(), message.getCorrelationId(), message.getResponse().getCode(), message.getResponse().getMessage(), message.getResponse().getData());
+        }
+        if (MessageType.SERVER_REQUEST.equals(message.getType())) {
+            log.debug("Received server request: type={}, messageId={}, correlationId={}, requestType={}, payload={}",
+                    message.getType(), message.getMessageId(), message.getCorrelationId(),
+                    message.getRequest().getType(), message.getRequest().getData().toStringUtf8());
+        }
+
 
         // Handle request responses
         if (Objects.nonNull(message.getCorrelationId()) && !message.getCorrelationId().isEmpty()) {
@@ -378,7 +399,6 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
                 return;
             }
         }
-
         // Handle server-pushed messages
         if (!messageHandlers.isEmpty()) {
             for (MessageHandler handler : messageHandlers) {
@@ -427,27 +447,21 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
      */
     private boolean sendConnectionMessage() {
         try {
-            String clientPayload = JSON.toJSONString(clientInfoService.buildClentInfoPayload());
+            RegisterRequest obj = clientInfoService.buildClentInfoPayload();
+            log.info("Sending connection message: {}", obj);
+            String clientPayload = JsonUtil.toJson(obj);
             CompletableFuture<TunnelMessage> future = sendRequest("CONNECT", clientPayload, 5000);
             TunnelMessage response = future.get(6, TimeUnit.SECONDS); // Wait for connection confirmation
-
+            log.info("Connection response received: {}", response.getResponse().getData().toStringUtf8());
             boolean success = response.hasResponse() && response.getResponse().getCode() == 200;
+
             log.debug("Connection validation result: success={}", success);
             return success;
 
-        } catch (TimeoutException e) {
-            log.warn("Connection message timeout after 6 seconds");
-            return false;
-        } catch (InterruptedException e) {
-            log.warn("Connection message interrupted");
-            Thread.currentThread().interrupt();
-            return false;
         } catch (ExecutionException e) {
-            log.warn("Connection message execution failed: {}", e.getCause().getMessage());
-            return false;
+            throw new RuntimeException(e);
         } catch (Exception e) {
-            log.error("Connection message failed", e);
-            return false;
+            throw new RuntimeException(e);
         }
     }
 
@@ -701,7 +715,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
      * Convert object to ByteString
      */
     private ByteString getByteString(Object message) {
-        String jsonString = JSON.toJSONString(message);
+        String jsonString = JsonUtil.toJson(message);
         return ByteString.copyFromUtf8(jsonString);
     }
 

@@ -1,6 +1,4 @@
-package top.redjujubetree.grpc.tunnel.server.manager;
-
-import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
+package top.redjujubetree.grpc.tunnel.server.connection;
 
 import java.util.Collection;
 
@@ -9,12 +7,10 @@ public interface ClientManager{
     void addClient(ClientConnection connection);
     
     void removeClient(String clientId);
+    void removeClient(String clientId, String reason);
     
     ClientConnection getClient(String clientId);
 
     Collection<ClientConnection> getAllClients();
     
-    void pushMessage(String clientId, TunnelMessage message) ;
-    
-    void broadcast(TunnelMessage message) ;
 }
