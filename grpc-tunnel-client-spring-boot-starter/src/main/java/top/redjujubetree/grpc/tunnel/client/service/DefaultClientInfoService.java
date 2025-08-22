@@ -1,23 +1,24 @@
 package top.redjujubetree.grpc.tunnel.client.service;
 
 import lombok.extern.slf4j.Slf4j;
+import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
+import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
 import top.redjujubetree.grpc.tunnel.utils.IpUtil;
 
-import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
+import javax.annotation.Resource;
 
 @Slf4j
 public class DefaultClientInfoService implements ClientInfoService{
+
+	@Resource
+	private ClientIdGenerator clientIdGenerator;
 	@Override
-	public Map<String, Serializable> buildClentInfoPayload() {
-		Map<String, Serializable> info = new HashMap<>();
-		info.put("clientVersion", "1.0.0");
-		info.put("clientType", "JAVA");
-		info.put("timestamp", System.currentTimeMillis());
-		info.put("serverMachineName", System.getProperty("os.name"));
-		info.put("clientIp", IpUtil.getBestIpv4());
-		log.info("Client info payload: {}", info);
-		return info;
+	public RegisterRequest buildClentInfoPayload() {
+		RegisterRequest registerRequest = new RegisterRequest();
+		registerRequest.setClientId(clientIdGenerator.generate());
+		registerRequest.setServerMachineName(System.getProperty("os.name"));
+		registerRequest.setClientPlatform(System.getProperty("os.name") + " " + System.getProperty("os.version"));
+		registerRequest.setClientIp(IpUtil.getBestIpv4());
+		return registerRequest;
 	}
 }

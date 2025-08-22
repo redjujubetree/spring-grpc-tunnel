@@ -1,6 +1,8 @@
 package top.redjujubetree.grpc.tunnel.server.connection;
 
 import lombok.extern.slf4j.Slf4j;
+import top.redjujubetree.grpc.tunnel.server.listener.ClientConnectionCloseListener;
+
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -15,7 +17,16 @@ public class ConnectionManager implements ClientManager {
     // statistics
     private long totalConnectionsEver = 0;
     private long totalDisconnections = 0;
-    
+
+    List<ClientConnectionCloseListener> clientConnectionCloseListeners;
+
+    public ConnectionManager() {
+        this.clientConnectionCloseListeners = new ArrayList<>();
+    }
+    public ConnectionManager(List<ClientConnectionCloseListener> clientConnectionCloseListeners) {
+        this.clientConnectionCloseListeners = clientConnectionCloseListeners != null ?
+                new ArrayList<>(clientConnectionCloseListeners) : new ArrayList<>();
+    }
     @Override
     public void addClient(ClientConnection connection) {
         if (connection == null || connection.getClientId() == null) {
@@ -137,7 +148,7 @@ public class ConnectionManager implements ClientManager {
     }
     
     /**
-     * 获取统计信息
+     * Get statistics about the connection manager.
      */
     public Map<String, Object> getStatistics() {
         Map<String, Object> stats = new HashMap<>();
@@ -171,9 +182,9 @@ public class ConnectionManager implements ClientManager {
     }
     
     /**
-     * 获取不活跃的客户端
-     * @param timeout 超时时间（毫秒）
-     * @return 不活跃的客户端ID列表
+     * Get a list of inactive clients based on the last activity time.
+     * @param timeout milliseconds of inactivity to consider a client inactive
+     * @return list of client IDs that have been inactive for longer than the specified timeout
      */
     public List<String> getInactiveClients(long timeout) {
         List<String> inactiveClients = new ArrayList<>();
@@ -184,7 +195,6 @@ public class ConnectionManager implements ClientManager {
                 inactiveClients.add(entry.getKey());
             }
         }
-        
         return inactiveClients;
     }
     
@@ -211,18 +221,18 @@ public class ConnectionManager implements ClientManager {
         
         try {
             connection.getObserver().onCompleted();
+            for (ClientConnectionCloseListener clientConnectionCloseListener : clientConnectionCloseListeners) {
+                try {
+                    clientConnectionCloseListener.onClientConnectionClosed(connection.getClientId());
+                } catch (Exception e) {
+                    log.error("Error notifying listener {} about closed connection for client: {}",
+                            clientConnectionCloseListener.getClass().getSimpleName(), connection.getClientId(), e);
+                }
+            }
         } catch (Exception e) {
             // the connection might already be closed
             log.debug("Error closing connection for client: {}", connection.getClientId(), e);
         }
     }
     
-    /**
-     * 获取原始连接Map（仅供内部使用，谨慎使用）
-     * @deprecated 使用其他公开方法代替直接访问Map
-     */
-    @Deprecated
-    public Map<String, ClientConnection> getClients() {
-        return connections;
-    }
 }

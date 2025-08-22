@@ -15,7 +15,12 @@ import top.redjujubetree.grpc.tunnel.handler.HeartbeatHandler;
 import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import top.redjujubetree.grpc.tunnel.server.GrpcTunnelServerService;
 import top.redjujubetree.grpc.tunnel.server.config.GrpcTunnelServerProperties;
-import top.redjujubetree.grpc.tunnel.server.handler.*;
+import top.redjujubetree.grpc.tunnel.server.filter.BasicClientRegistrationFilter;
+import top.redjujubetree.grpc.tunnel.server.filter.ClientRegisterFilter;
+import top.redjujubetree.grpc.tunnel.server.handler.DefaultConnectedHandler;
+import top.redjujubetree.grpc.tunnel.server.handler.DefaultDisconnectedHandler;
+import top.redjujubetree.grpc.tunnel.server.handler.DefaultHeartbeatHandler;
+import top.redjujubetree.grpc.tunnel.server.listener.ClientConnectionCloseListener;
 
 import java.util.List;
 
@@ -28,8 +33,8 @@ import java.util.List;
 public class GrpcTunnelServerAutoConfiguration {
 
     @Bean
-    public BasicConnectionHandler basicConnectionHandler() {
-        return new BasicConnectionHandler();
+    public BasicClientRegistrationFilter basicClientRegistrationFilter() {
+        return new BasicClientRegistrationFilter();
     }
     @Bean
     @ConditionalOnMissingBean(HeartbeatHandler.class)
@@ -53,14 +58,16 @@ public class GrpcTunnelServerAutoConfiguration {
     @ConditionalOnMissingBean
     public GrpcTunnelServerService grpcTunnelServerService(
             GrpcTunnelServerProperties properties,
-            List<ConnectionHandler> connectionHandlers,
+            List<ClientRegisterFilter> clientRegisterFilters,
+            List<ClientConnectionCloseListener> clientConnectionCloseListeners,
             List<MessageHandler> messageHandlers,
             HeartbeatHandler heartbeatHandler) {
         return new GrpcTunnelServerService(
-            properties,
-            connectionHandlers,
-            messageHandlers,
-            heartbeatHandler
+                properties,
+                clientRegisterFilters,
+                clientConnectionCloseListeners,
+                messageHandlers,
+                heartbeatHandler
         );
     }
 }

@@ -9,7 +9,7 @@ import top.redjujubetree.grpc.tunnel.server.handler.DefaultConnectedHandler;
 
 @Slf4j
 @Component
-public class ConnectedHandler extends DefaultConnectedHandler {
+public class ClientOnlineHandler extends DefaultConnectedHandler {
 
 	@Override
 	protected ResponsePayload handlerRequest(TunnelMessage request) {

@@ -16,14 +16,18 @@ import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
 import top.redjujubetree.grpc.tunnel.server.config.GrpcTunnelServerProperties;
 import top.redjujubetree.grpc.tunnel.server.connection.ClientConnection;
 import top.redjujubetree.grpc.tunnel.server.connection.ConnectionManager;
-import top.redjujubetree.grpc.tunnel.server.handler.ConnectionHandler;
+import top.redjujubetree.grpc.tunnel.server.filter.ClientRegisterFilter;
 import top.redjujubetree.grpc.tunnel.server.handler.ConnectionResult;
+import top.redjujubetree.grpc.tunnel.server.listener.ClientConnectionCloseListener;
 import top.redjujubetree.grpc.tunnel.utils.JsonUtil;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Client Management is removed from the GrpcTunnelServerService, and now it is handled by ConnectionManager.
@@ -40,20 +44,23 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
     private ScheduledFuture<?> heartbeatCheckTask;
     
     private final GrpcTunnelServerProperties properties;
-    private final List<ConnectionHandler> connectionHandlers;
+    private final List<ClientRegisterFilter> clientRegisterFilters;
+    private final List<ClientConnectionCloseListener> clientConnectionCloseListeners;
     private final List<MessageHandler> messageHandlers;
     private final HeartbeatHandler heartbeatHandler;
     
     public GrpcTunnelServerService(
             GrpcTunnelServerProperties properties,
-            List<ConnectionHandler> connectionHandlers,
+            List<ClientRegisterFilter> clientRegisterFilters,
+            List<ClientConnectionCloseListener> clientConnectionCloseListeners,
             List<MessageHandler> messageHandlers,
             HeartbeatHandler heartbeatHandler) {
         this.properties = properties;
-        this.connectionHandlers = connectionHandlers != null ? connectionHandlers : Collections.emptyList();
+        this.clientRegisterFilters = clientRegisterFilters != null ? clientRegisterFilters : Collections.emptyList();
+        this.clientConnectionCloseListeners = Collections.emptyList(); //clientConnectionCloseListeners != null ? clientConnectionCloseListeners : Collections.emptyList();
         this.messageHandlers = messageHandlers != null ? messageHandlers : Collections.emptyList();
         this.heartbeatHandler = heartbeatHandler;
-        connectionManager = new ConnectionManager();
+        connectionManager = new ConnectionManager(clientConnectionCloseListeners);
     }
     
     // Default constructor to maintain backward compatibility
@@ -62,6 +69,7 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
         this(
             // You might want to create a method to get default properties
             new GrpcTunnelServerProperties(),
+            Collections.emptyList(),
             Collections.emptyList(),
             Collections.emptyList(), 
             null
@@ -72,7 +80,8 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
     public void init() {
         log.info("GRPC Tunnel Server starting with properties: {}", properties);
 
-        connectionHandlers.sort(Comparator.comparingInt(ConnectionHandler::getOrder));
+        clientRegisterFilters.sort(Comparator.comparingInt(ClientRegisterFilter::getOrder));
+        clientConnectionCloseListeners.sort(Comparator.comparingInt(ClientConnectionCloseListener::getOrder));
         messageHandlers.sort(Comparator.comparingInt(MessageHandler::getOrder));
 
         startHeartbeatChecker();
@@ -179,17 +188,17 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
                 if (connectionManager.getActiveConnectionCount() >= properties.getMaxClients()) {
                     log.error("Max clients limit reached: {}", properties.getMaxClients());
                     sendErrorResponse(responseObserver, message, 503, "Server at capacity");
-                    closeConnection(responseObserver);
+                    closeConnectionOnEstablishTunnelFailed(responseObserver);
                     return false;
                 }
 
                 RegisterRequest registerRequest = JsonUtil.fromJson(message.getRequest().getData().toStringUtf8(), RegisterRequest.class);
                 Map<String, Object> metadata = new HashMap<>();
-                for (ConnectionHandler connectionHandler : connectionHandlers) {
-                    ConnectionResult connectionResult = connectionHandler.handleConnection(message, registerRequest);
+                for (ClientRegisterFilter clientRegisterFilter : clientRegisterFilters) {
+                    ConnectionResult connectionResult = clientRegisterFilter.doFilter(message, registerRequest);
                     if (!connectionResult.isAccepted()) {
                         sendErrorResponse(responseObserver, message, 400, connectionResult.getMessage());
-                        closeConnection(responseObserver);
+                        closeConnectionOnEstablishTunnelFailed(responseObserver);
                         return false;
                     }
                     if (connectionResult.getMetadata() != null && !connectionResult.getMetadata().isEmpty()) {
@@ -249,11 +258,9 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
                 if (clientId != null) {
                     connectionManager.removeClient(clientId, "Client disconnected normally");
                 }
-
-                closeConnection(responseObserver);
             }
 
-            private void closeConnection(StreamObserver<TunnelMessage> observer) {
+            private void closeConnectionOnEstablishTunnelFailed(StreamObserver<TunnelMessage> observer) {
                 try {
                     observer.onCompleted();
                 } catch (Exception e) {
@@ -330,6 +337,8 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
     
     private void sendErrorResponse(StreamObserver<TunnelMessage> observer, TunnelMessage request, 
                                    int code, String message) {
+        log.info("Sending error response for request: {}, code: {}, message: {}",
+                request.getMessageId(), code, message);
         TunnelMessage response = TunnelMessage.newBuilder()
             .setMessageId(UUID.randomUUID().toString())
             .setClientId(request.getClientId())

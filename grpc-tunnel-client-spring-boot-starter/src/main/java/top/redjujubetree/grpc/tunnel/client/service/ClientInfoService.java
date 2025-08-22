@@ -1,9 +1,8 @@
 package top.redjujubetree.grpc.tunnel.client.service;
 
-import java.io.Serializable;
-import java.util.Map;
+import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
 
 public interface ClientInfoService {
 
-	Map<String, Serializable> buildClentInfoPayload();
+	RegisterRequest buildClentInfoPayload();
 }

@@ -1,5 +1,7 @@
 package top.redjujubetree.grpc.tunnel.utils;
 
+import com.google.protobuf.GeneratedMessageV3;
+
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.*;
@@ -27,7 +29,11 @@ public class JsonUtil {
         }
         
         Class<?> clazz = obj.getClass();
-        
+
+        if (obj instanceof GeneratedMessageV3) {
+            throw new RuntimeException("Protobuf objects are not supported by this JSON utility. Please use Protobuf's own serialization methods.");
+        }
+
         // Handle primitive types and wrapper classes
         if (isPrimitive(clazz)) {
             return obj.toString();
@@ -137,6 +143,7 @@ public class JsonUtil {
     }
     
     private static String objectToJson(Object obj) {
+
         StringBuilder sb = new StringBuilder("{");
         Class<?> clazz = obj.getClass();
         Field[] fields = clazz.getDeclaredFields();
