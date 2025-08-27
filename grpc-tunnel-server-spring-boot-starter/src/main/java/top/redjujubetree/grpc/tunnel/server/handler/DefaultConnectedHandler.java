@@ -1,11 +1,9 @@
 package top.redjujubetree.grpc.tunnel.server.handler;
 
 import lombok.extern.slf4j.Slf4j;
-import top.redjujubetree.grpc.tunnel.handler.ClientRequestMessageHandler;
-import top.redjujubetree.grpc.tunnel.handler.ConnectedHandler;
+import top.redjujubetree.grpc.tunnel.constant.ClientRequestTypes;
 import top.redjujubetree.grpc.tunnel.proto.RequestPayload;
 import top.redjujubetree.grpc.tunnel.proto.ResponsePayload;
-import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
 
 /**
  * Default implementation of ConnectedHandler that handles CONNECT requests.
@@ -13,18 +11,17 @@ import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
  * This class can be extended to implement custom behavior for handling CONNECT requests.
  */
 @Slf4j
-public class DefaultConnectedHandler extends ClientRequestMessageHandler implements ConnectedHandler {
-
+public class DefaultConnectedHandler extends AbstractClientRequestMessageHandler implements ConnectedHandler {
 
 	@Override
-	public boolean supportsRequestType(RequestPayload request) {
-		return "CONNECT".equals(request.getType());
+	protected boolean supportRequestType(String request) {
+		return ClientRequestTypes.CONNECT.equals(request);
 	}
 
 	@Override
-	protected ResponsePayload handlerRequest(TunnelMessage request) {
-		String mapStr = request.getRequest().getData().toStringUtf8();
-		log.info("handlerRequest for connect : {}", mapStr);
+	protected ResponsePayload handleRequest(RequestPayload request) {
+		String mapStr = request.getData().toStringUtf8();
+		log.info("handleRequest for connect : {}", mapStr);
 		return null;
 	}
 

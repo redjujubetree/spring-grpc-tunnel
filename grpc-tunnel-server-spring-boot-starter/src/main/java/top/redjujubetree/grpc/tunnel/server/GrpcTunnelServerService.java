@@ -6,7 +6,6 @@ import lombok.Getter;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import top.redjujubetree.grpc.tunnel.handler.HeartbeatHandler;
 import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
 import top.redjujubetree.grpc.tunnel.proto.GrpcTunnelServiceGrpc;
@@ -18,6 +17,7 @@ import top.redjujubetree.grpc.tunnel.server.connection.ClientConnection;
 import top.redjujubetree.grpc.tunnel.server.connection.ConnectionManager;
 import top.redjujubetree.grpc.tunnel.server.filter.ClientRegisterFilter;
 import top.redjujubetree.grpc.tunnel.server.handler.ConnectionResult;
+import top.redjujubetree.grpc.tunnel.server.handler.HeartbeatHandler;
 import top.redjujubetree.grpc.tunnel.server.listener.ClientConnectionCloseListener;
 import top.redjujubetree.grpc.tunnel.utils.JsonUtil;
 
@@ -39,7 +39,7 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
     
     private static final Logger log = LoggerFactory.getLogger(GrpcTunnelServerService.class);
     
-    private ConnectionManager connectionManager;
+    private final ConnectionManager connectionManager;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     private ScheduledFuture<?> heartbeatCheckTask;
     
@@ -222,7 +222,7 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
             private void processMessage(TunnelMessage message,
                                         StreamObserver<TunnelMessage> responseObserver) {
                 // to handle heartbeat messages
-                if (heartbeatHandler != null && heartbeatHandler.supports(message)) {
+                if (heartbeatHandler != null && heartbeatHandler.support(message)) {
                     heartbeatHandler.handleHeartbeat(message);
                     sendHeartbeatResponse(responseObserver, message);
                     return;
@@ -272,15 +272,19 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
 
     private void handleBusinessMessage(TunnelMessage message, StreamObserver<TunnelMessage> responseObserver) {
         if (messageHandlers == null || messageHandlers.isEmpty()) {
-            log.warn("No message handlers configured for message type: {}", message.getRequest().getType());
+            if (message.hasRequest()){
+                log.warn("No message handlers configured for request {}", message.getRequest());
+            }
+            if (message.hasResponse()) {
+                log.warn("No message handlers configured for response {}", message.getResponse());
+            }
             sendErrorResponse(responseObserver, message, 501, "No handler available");
             return;
         }
-        
 
         boolean handled = false;
         for (MessageHandler handler : messageHandlers) {
-            if (handler.supports(message)) {
+            if (handler.support(message)) {
                 handled = true;
                 handler.handle(message).whenComplete((response, error) -> {
                     if (error != null) {

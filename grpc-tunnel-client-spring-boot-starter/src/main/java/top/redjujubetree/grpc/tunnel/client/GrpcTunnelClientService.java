@@ -13,6 +13,7 @@ import top.redjujubetree.grpc.tunnel.client.config.GrpcTunnelClientProperties;
 import top.redjujubetree.grpc.tunnel.client.service.ClientInfoService;
 import top.redjujubetree.grpc.tunnel.client.service.DefaultHeartbeatService;
 import top.redjujubetree.grpc.tunnel.client.service.HeartbeatService;
+import top.redjujubetree.grpc.tunnel.constant.ClientRequestTypes;
 import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
 import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
@@ -402,7 +403,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
         // Handle server-pushed messages
         if (!messageHandlers.isEmpty()) {
             for (MessageHandler handler : messageHandlers) {
-                if (handler.supports(message)) {
+                if (handler.support(message)) {
                     handler.handle(message).whenComplete((response, error) -> {
                         if (error != null) {
                             log.error("Handler error", error);
@@ -450,7 +451,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
             RegisterRequest obj = clientInfoService.buildClentInfoPayload();
             log.info("Sending connection message: {}", obj);
             String clientPayload = JsonUtil.toJson(obj);
-            CompletableFuture<TunnelMessage> future = sendRequest("CONNECT", clientPayload, 5000);
+            CompletableFuture<TunnelMessage> future = sendRequest(ClientRequestTypes.CONNECT, clientPayload, 5000);
             TunnelMessage response = future.get(6, TimeUnit.SECONDS); // Wait for connection confirmation
             log.info("Connection response received: {}", response.getResponse().getData().toStringUtf8());
             boolean success = response.hasResponse() && response.getResponse().getCode() == 200;
@@ -707,16 +708,6 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
         pendingRequests.forEach((id, future) ->
                 future.completeExceptionally(new IllegalStateException("Client shutting down")));
         pendingRequests.clear();
-    }
-
-    // ==================== Utility Methods ====================
-
-    /**
-     * Convert object to ByteString
-     */
-    private ByteString getByteString(Object message) {
-        String jsonString = JsonUtil.toJson(message);
-        return ByteString.copyFromUtf8(jsonString);
     }
 
     // ==================== Status Query Methods ====================

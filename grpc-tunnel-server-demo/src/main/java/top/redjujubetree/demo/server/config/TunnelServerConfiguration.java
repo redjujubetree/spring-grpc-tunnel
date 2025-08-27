@@ -1,12 +1,14 @@
-package top.redjujubetree.config;
+package top.redjujubetree.demo.server.config;
 
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import top.redjujubetree.grpc.tunnel.handler.HeartbeatHandler;
+import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
+import top.redjujubetree.grpc.tunnel.generator.SingleIpClientIdGenerator;
 import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
+import top.redjujubetree.grpc.tunnel.server.handler.HeartbeatHandler;
 
 @Configuration
 public class TunnelServerConfiguration {
@@ -26,6 +28,11 @@ public class TunnelServerConfiguration {
 				log.error("deal heartbeat timeout, need to set the client offline");
 			}
 		};
+	}
+
+	@Bean
+	public ClientIdGenerator clientIdGenerator() {
+		return new SingleIpClientIdGenerator();
 	}
 
 }

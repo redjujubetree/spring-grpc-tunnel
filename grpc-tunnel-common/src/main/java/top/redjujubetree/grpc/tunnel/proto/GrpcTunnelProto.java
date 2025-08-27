@@ -48,16 +48,16 @@ public final class GrpcTunnelProto {
       "oad\022@\n\010response\030\006 \001(\0132..top.redjujubetre" +
       "e.tunnel.grpc.ResponsePayload\022\026\n\016correla" +
       "tion_id\030\007 \001(\t\",\n\016RequestPayload\022\014\n\004type\030" +
-      "\001 \001(\t\022\014\n\004data\030\002 \001(\014\">\n\017ResponsePayload\022\014" +
-      "\n\004code\030\001 \001(\005\022\017\n\007message\030\002 \001(\t\022\014\n\004data\030\003 " +
-      "\001(\014*_\n\013MessageType\022\022\n\016SERVER_REQUEST\020\000\022\023" +
-      "\n\017SERVER_RESPONSE\020\001\022\022\n\016CLIENT_REQUEST\020\002\022" +
-      "\023\n\017CLIENT_RESPONSE\020\0032\206\001\n\021GrpcTunnelServi" +
-      "ce\022q\n\017EstablishTunnel\022,.top.redjujubetre" +
-      "e.tunnel.grpc.TunnelMessage\032,.top.redjuj" +
-      "ubetree.tunnel.grpc.TunnelMessage(\0010\001B8\n" +
-      "#top.redjujubetree.grpc.tunnel.protoB\017Gr" +
-      "pcTunnelProtoP\001b\006proto3"
+      "\001 \001(\t\022\014\n\004data\030\002 \001(\014\"L\n\017ResponsePayload\022\014" +
+      "\n\004type\030\001 \001(\t\022\014\n\004code\030\002 \001(\005\022\017\n\007message\030\003 " +
+      "\001(\t\022\014\n\004data\030\004 \001(\014*_\n\013MessageType\022\022\n\016SERV" +
+      "ER_REQUEST\020\000\022\023\n\017SERVER_RESPONSE\020\001\022\022\n\016CLI" +
+      "ENT_REQUEST\020\002\022\023\n\017CLIENT_RESPONSE\020\0032\206\001\n\021G" +
+      "rpcTunnelService\022q\n\017EstablishTunnel\022,.to" +
+      "p.redjujubetree.tunnel.grpc.TunnelMessag" +
+      "e\032,.top.redjujubetree.tunnel.grpc.Tunnel" +
+      "Message(\0010\001B8\n#top.redjujubetree.grpc.tu" +
+      "nnel.protoB\017GrpcTunnelProtoP\001b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -80,7 +80,7 @@ public final class GrpcTunnelProto {
     internal_static_top_redjujubetree_tunnel_grpc_ResponsePayload_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_top_redjujubetree_tunnel_grpc_ResponsePayload_descriptor,
-        new java.lang.String[] { "Code", "Message", "Data", });
+        new java.lang.String[] { "Type", "Code", "Message", "Data", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

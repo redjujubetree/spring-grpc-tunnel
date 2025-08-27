@@ -9,25 +9,37 @@ public interface ResponsePayloadOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <code>int32 code = 1;</code>
+   * <code>string type = 1;</code>
+   * @return The type.
+   */
+  java.lang.String getType();
+  /**
+   * <code>string type = 1;</code>
+   * @return The bytes for type.
+   */
+  com.google.protobuf.ByteString
+      getTypeBytes();
+
+  /**
+   * <code>int32 code = 2;</code>
    * @return The code.
    */
   int getCode();
 
   /**
-   * <code>string message = 2;</code>
+   * <code>string message = 3;</code>
    * @return The message.
    */
   java.lang.String getMessage();
   /**
-   * <code>string message = 2;</code>
+   * <code>string message = 3;</code>
    * @return The bytes for message.
    */
   com.google.protobuf.ByteString
       getMessageBytes();
 
   /**
-   * <code>bytes data = 3;</code>
+   * <code>bytes data = 4;</code>
    * @return The data.
    */
   com.google.protobuf.ByteString getData();

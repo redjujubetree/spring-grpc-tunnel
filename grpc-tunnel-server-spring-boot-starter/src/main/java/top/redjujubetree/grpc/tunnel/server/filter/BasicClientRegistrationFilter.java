@@ -3,6 +3,7 @@ package top.redjujubetree.grpc.tunnel.server.filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
+import top.redjujubetree.grpc.tunnel.constant.ClientRequestTypes;
 import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
 import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
 import top.redjujubetree.grpc.tunnel.server.handler.ConnectionResult;
@@ -26,7 +27,7 @@ public class BasicClientRegistrationFilter implements ClientRegisterFilter {
             return ConnectionResult.reject("Register request or client ID is null");
         }
 
-        if (!"CONNECT".equals(message.getRequest().getType())){
+        if (!ClientRequestTypes.CONNECT.equals(message.getRequest().getType())){
             return ConnectionResult.reject("Unsupported request type: " + message.getRequest().getType());
         }
 
