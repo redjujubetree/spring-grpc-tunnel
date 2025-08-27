@@ -1,7 +1,7 @@
 package top.redjujubetree.grpc.tunnel.handler;
 
-import top.redjujubetree.grpc.tunnel.proto.RequestPayload;
 import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
+
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -11,9 +11,8 @@ public interface MessageHandler {
     /**
      * if the handler supports the request type
      */
-    boolean supports(TunnelMessage request);
+    boolean support(TunnelMessage request);
 
-    boolean supportsRequestType(RequestPayload request) ;
     /**
      * do handle the request,
      * if the CompletableFuture carries a result, it means the request is handled successfully,

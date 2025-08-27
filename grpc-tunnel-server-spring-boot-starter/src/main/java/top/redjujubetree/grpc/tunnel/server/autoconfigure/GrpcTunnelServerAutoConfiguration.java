@@ -9,17 +9,12 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import top.redjujubetree.grpc.tunnel.handler.ConnectedHandler;
-import top.redjujubetree.grpc.tunnel.handler.DisconnectedHandler;
-import top.redjujubetree.grpc.tunnel.handler.HeartbeatHandler;
 import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import top.redjujubetree.grpc.tunnel.server.GrpcTunnelServerService;
 import top.redjujubetree.grpc.tunnel.server.config.GrpcTunnelServerProperties;
 import top.redjujubetree.grpc.tunnel.server.filter.BasicClientRegistrationFilter;
 import top.redjujubetree.grpc.tunnel.server.filter.ClientRegisterFilter;
-import top.redjujubetree.grpc.tunnel.server.handler.DefaultConnectedHandler;
-import top.redjujubetree.grpc.tunnel.server.handler.DefaultDisconnectedHandler;
-import top.redjujubetree.grpc.tunnel.server.handler.DefaultHeartbeatHandler;
+import top.redjujubetree.grpc.tunnel.server.handler.*;
 import top.redjujubetree.grpc.tunnel.server.listener.ClientConnectionCloseListener;
 
 import java.util.List;

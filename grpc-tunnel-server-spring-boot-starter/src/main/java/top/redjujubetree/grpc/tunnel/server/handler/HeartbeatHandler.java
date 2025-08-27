@@ -1,5 +1,6 @@
-package top.redjujubetree.grpc.tunnel.handler;
+package top.redjujubetree.grpc.tunnel.server.handler;
 
+import top.redjujubetree.grpc.tunnel.constant.ClientRequestTypes;
 import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
 
 /**
@@ -11,8 +12,8 @@ public interface HeartbeatHandler {
      */
     void handleHeartbeat(TunnelMessage message);
 
-    default boolean supports(TunnelMessage message) {
-        return message.hasRequest() && "HEARTBEAT".equals(message.getRequest().getType());
+    default boolean support(TunnelMessage message) {
+        return message.hasRequest() && ClientRequestTypes.HEARTBEAT.equals(message.getRequest().getType());
     }
     /**
      * handle timeout

@@ -1,4 +1,4 @@
-package top.redjujubetree.service;
+package top.redjujubetree.demo.server.handler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -11,10 +11,10 @@ public class ClientOfflineHandler implements ClientConnectionCloseListener {
 	@Override
 	public void onClientConnectionClosed(String clientId) {
 		log.info("Client connection closed: {}", clientId);
-		handler(clientId);
+		handle(clientId);
 	}
 
-	private void handler(String clientId) {
+	private void handle(String clientId) {
 		log.info("Handling client offline logic for client: {}", clientId);
 		log.info("Client {} is offline, performing necessary cleanup and notifications.", clientId);
 	}
