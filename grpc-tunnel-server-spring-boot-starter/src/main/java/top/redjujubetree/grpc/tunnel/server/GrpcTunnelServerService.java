@@ -1,6 +1,8 @@
 package top.redjujubetree.grpc.tunnel.server;
 
 import com.google.protobuf.ByteString;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
 import net.devh.boot.grpc.server.service.GrpcService;
@@ -239,7 +241,17 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
                 }
 
                 isActive = false;
-                log.error("Connection error for client: {}", clientId, t);
+                if (t instanceof StatusRuntimeException) {
+                    StatusRuntimeException sre = (StatusRuntimeException) t;
+                    if (sre.getStatus().getCode() == Status.Code.CANCELLED) {
+                        log.info("Client {} disconnected (cancelled by client)", clientId);
+                    } else {
+                        log.warn("Connection error for client: {} - {}", clientId, sre.getStatus());
+                    }
+                } else {
+                    log.error("Unexpected connection error for client: {}", clientId, t);
+                }
+
 
                 if (clientId != null) {
                     connectionManager.removeClient(clientId, "Connection error: " + t.getMessage());

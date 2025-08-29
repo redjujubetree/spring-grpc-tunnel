@@ -24,8 +24,8 @@
 
 	<developers>
 		<developer>
-			<id>yourid</id>
-			<name>redjujubetree</name>
+			<id>kenny</id>
+			<name>Kenny</name>
 			<email>redjujubetree@gmail.com</email>
 		</developer>
 	</developers>
@@ -157,6 +157,9 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<passphraseServerId>gpg.passphrase</passphraseServerId>
+				</configuration>
 			</plugin>
 
 			<!-- Sonatype 发布插件 -->

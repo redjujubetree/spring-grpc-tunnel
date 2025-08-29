@@ -460,7 +460,12 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
             return success;
 
         } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+            if (e.getCause() instanceof TimeoutException) {
+                log.warn("Connection validation timed out. Message: {}", e.getCause().getMessage());
+            } else {
+                log.error("Connection validation failed", e.getCause());
+            }
+            return false;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
