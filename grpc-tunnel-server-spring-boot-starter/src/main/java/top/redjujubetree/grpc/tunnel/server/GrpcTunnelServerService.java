@@ -380,9 +380,14 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
         ClientConnection connection = connectionManager.getClient(clientId);
         if (connection != null) {
             try {
-                connection.getObserver().onNext(message);
-                connectionManager.recordMessageSent(clientId);
-                return true;
+                boolean success = connection.sendMessage(message);
+                if (success) {
+                    connectionManager.recordMessageSent(clientId);
+                    return true;
+                } else {
+                    connectionManager.removeClient(clientId, "发送消息失败");
+                    return false;
+                }
             } catch (Exception e) {
                 log.error("Error sending message to client: {}", clientId, e);
                 connectionManager.removeClient(clientId, "Error sending message");
@@ -402,13 +407,13 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
 
         Collection<ClientConnection> allClients = connectionManager.getAllClients();
         for (ClientConnection connection : allClients) {
-			try {
-				connection.getObserver().onNext(message);
-				connectionManager.recordMessageSent(connection.getClientId());
-			} catch (Exception e) {
-				log.error("Error broadcasting message to client: {}", connection.getClientId());
+            boolean success = connection.sendMessage(message);
+            if (success) {
+                connectionManager.recordMessageSent(connection.getClientId());
+            } else {
+                log.error("Error broadcasting message to client: {}", connection.getClientId());
                 failedClients.add(connection.getClientId());
-			}
+            }
 		}
         connectionManager.removeClients(failedClients, "Error broadcasting message");
         log.info("Broadcast message sent to {} clients, failed for {} clients",

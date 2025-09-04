@@ -214,25 +214,27 @@ public class ConnectionManager implements ClientManager {
     /**
      * close a specific client connection
      */
+    /**
+     * close a specific client connection
+     */
     private void closeConnection(ClientConnection connection) {
         if (connection == null) {
             return;
         }
-        
+
         try {
-            connection.getObserver().onCompleted();
-            for (ClientConnectionCloseListener clientConnectionCloseListener : clientConnectionCloseListeners) {
+            connection.closeConnection();
+
+            for (ClientConnectionCloseListener listener : clientConnectionCloseListeners) {
                 try {
-                    clientConnectionCloseListener.onClientConnectionClosed(connection.getClientId());
+                    listener.onClientConnectionClosed(connection.getClientId());
                 } catch (Exception e) {
                     log.error("Error notifying listener {} about closed connection for client: {}",
-                            clientConnectionCloseListener.getClass().getSimpleName(), connection.getClientId(), e);
+                            listener.getClass().getSimpleName(), connection.getClientId(), e);
                 }
             }
         } catch (Exception e) {
-            // the connection might already be closed
             log.debug("Error closing connection for client: {}", connection.getClientId(), e);
         }
     }
-    
 }

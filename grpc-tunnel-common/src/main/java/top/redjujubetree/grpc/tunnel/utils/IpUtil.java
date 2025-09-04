@@ -29,20 +29,18 @@ public class IpUtil {
                 if (addr instanceof Inet4Address && !addr.isLoopbackAddress()) {
                    String ip = addr.getHostAddress();
 
-                   // 跳过无效或占位符 IP
                    if (!isValidIpAddress(ip)) {
-                      log.debug("跳过无效 IP: {} (接口: {})", ip, netIf.getName());
+                      log.debug("skip invalid IP: {} (net interface: {})", ip, netIf.getName());
                       continue;
                    }
                    
                    if (!isPrivateIp(ip)) {
-                      log.info("找到有效公网 IP: {} (接口: {})", ip, netIf.getName());
-                      // 优先选择真实的网络接口
+                      log.info("public IP: {} (net interface: {})", ip, netIf.getName());
                       if (isRealNetworkInterface(netIf) && bestPublicIp == null) {
                          bestPublicIp = ip;
                       }
                    } else {
-                      log.debug("找到私有 IP: {} (接口: {})", ip, netIf.getName());
+                      log.debug("private IP: {} (net interface: {})", ip, netIf.getName());
                       if (localIp == null && isRealNetworkInterface(netIf)) {
                          localIp = ip;
                       }
@@ -53,7 +51,7 @@ public class IpUtil {
 
           String result = bestPublicIp != null ? bestPublicIp : 
                          (localIp != null ? localIp : InetAddress.getLocalHost().getHostAddress());
-          log.info("最终选择的 IP: {}", result);
+          log.info("the return IP: {}", result);
           return result;
           
        } catch (Exception e) {
@@ -63,14 +61,13 @@ public class IpUtil {
     }
 
     /**
-     * 检查 IP 地址是否有效（排除占位符和无效地址）
+     * check if the given IP address is valid (not a placeholder or invalid address)
      */
     public static boolean isValidIpAddress(String ip) {
         if (ip == null || ip.isEmpty()) {
             return false;
         }
         
-        // 排除明显的占位符地址
         if (ip.startsWith("0.") ||
             ip.startsWith("1.0.0.") ||
             ip.startsWith("2.0.0.") ||
@@ -79,8 +76,7 @@ public class IpUtil {
             ip.equals("255.255.255.255")) {
             return false;
         }
-        
-        // 检查 IP 格式有效性
+
         try {
             InetAddress.getByName(ip);
             return true;
@@ -90,7 +86,7 @@ public class IpUtil {
     }
 
     /**
-     * 判断是否为真实的物理网络接口
+     * check if the network interface is a real physical interface
      */
     private static boolean isRealNetworkInterface(NetworkInterface netIf) {
         try {
@@ -98,7 +94,6 @@ public class IpUtil {
             String displayName = netIf.getDisplayName() != null ? 
                                 netIf.getDisplayName().toLowerCase() : "";
             
-            // 排除虚拟接口
             String[] virtualPatterns = {
                 "docker", "veth", "br-", "vmnet", "vbox", "tun", "tap",
                 "lo", "dummy", "bond", "team", "bridge", "virtual"
@@ -110,13 +105,11 @@ public class IpUtil {
                 }
             }
             
-            // 检查是否有有效的 MAC 地址
             byte[] mac = netIf.getHardwareAddress();
             if (mac == null || mac.length == 0) {
                 return false;
             }
             
-            // 检查 MAC 地址是否全为 0（虚拟接口特征）
             boolean allZero = true;
             for (byte b : mac) {
                 if (b != 0) {
@@ -128,8 +121,8 @@ public class IpUtil {
             return !allZero;
             
         } catch (Exception e) {
-            log.debug("无法检查网络接口: {}", netIf.getName(), e);
-            return true; // 保守地认为是有效接口
+            log.debug("check physical network interface failed: {}", netIf.getName(), e);
+            return true;
         }
     }
 
