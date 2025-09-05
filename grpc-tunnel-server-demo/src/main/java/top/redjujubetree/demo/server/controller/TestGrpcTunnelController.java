@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
 import top.redjujubetree.grpc.tunnel.proto.RequestPayload;
 import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
-import top.redjujubetree.grpc.tunnel.server.GrpcTunnelServerService;
+import top.redjujubetree.grpc.tunnel.server.service.TunnelServerMessageService;
 
 import javax.annotation.Resource;
 import java.util.UUID;
@@ -18,7 +18,7 @@ import java.util.UUID;
 public class TestGrpcTunnelController {
 
 	@Resource
-	private GrpcTunnelServerService grpcTunnelServerService;
+	private TunnelServerMessageService tunnelServerMessageService;
 	@Resource
 	private ClientIdGenerator clientIdGenerator;
 
@@ -32,7 +32,7 @@ public class TestGrpcTunnelController {
 		payload.setType("notifyWithAck");
 		payload.setData(ByteString.copyFromUtf8("hello client, this is a notify which need a ack from server"));
 		builder.setRequest(payload.build());
-		grpcTunnelServerService.sendToClient(clientId, builder.build());
+		tunnelServerMessageService.sendToClient(clientId, builder.build());
 		return "sent";
 	}
 }

@@ -20,7 +20,6 @@ import top.redjujubetree.grpc.tunnel.server.connection.ConnectionManager;
 import top.redjujubetree.grpc.tunnel.server.filter.ClientRegisterFilter;
 import top.redjujubetree.grpc.tunnel.server.handler.ConnectionResult;
 import top.redjujubetree.grpc.tunnel.server.handler.HeartbeatHandler;
-import top.redjujubetree.grpc.tunnel.server.listener.ClientConnectionCloseListener;
 import top.redjujubetree.grpc.tunnel.utils.JsonUtil;
 
 import javax.annotation.PostConstruct;
@@ -47,35 +46,20 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
     
     private final GrpcTunnelServerProperties properties;
     private final List<ClientRegisterFilter> clientRegisterFilters;
-    private final List<ClientConnectionCloseListener> clientConnectionCloseListeners;
     private final List<MessageHandler> messageHandlers;
     private final HeartbeatHandler heartbeatHandler;
     
     public GrpcTunnelServerService(
             GrpcTunnelServerProperties properties,
             List<ClientRegisterFilter> clientRegisterFilters,
-            List<ClientConnectionCloseListener> clientConnectionCloseListeners,
+            ConnectionManager connectionManager,
             List<MessageHandler> messageHandlers,
             HeartbeatHandler heartbeatHandler) {
         this.properties = properties;
         this.clientRegisterFilters = clientRegisterFilters != null ? clientRegisterFilters : Collections.emptyList();
-        this.clientConnectionCloseListeners = Collections.emptyList(); //clientConnectionCloseListeners != null ? clientConnectionCloseListeners : Collections.emptyList();
+        this.connectionManager = connectionManager;
         this.messageHandlers = messageHandlers != null ? messageHandlers : Collections.emptyList();
         this.heartbeatHandler = heartbeatHandler;
-        connectionManager = new ConnectionManager(clientConnectionCloseListeners);
-    }
-    
-    // Default constructor to maintain backward compatibility
-    public GrpcTunnelServerService() {
-        // Use default values or delegate to configuration
-        this(
-            // You might want to create a method to get default properties
-            new GrpcTunnelServerProperties(),
-            Collections.emptyList(),
-            Collections.emptyList(),
-            Collections.emptyList(), 
-            null
-        );
     }
 
     @PostConstruct
@@ -83,7 +67,7 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
         log.info("GRPC Tunnel Server starting with properties: {}", properties);
 
         clientRegisterFilters.sort(Comparator.comparingInt(ClientRegisterFilter::getOrder));
-        clientConnectionCloseListeners.sort(Comparator.comparingInt(ClientConnectionCloseListener::getOrder));
+
         messageHandlers.sort(Comparator.comparingInt(MessageHandler::getOrder));
 
         startHeartbeatChecker();
@@ -369,58 +353,6 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
         observer.onNext(response);
     }
 
-    /**
-     * send a message to a specific client
-     */
-    public boolean sendToClient(String clientId, TunnelMessage message) {
-        if (clientId == null || message == null) {
-            log.warn("Client ID or message is null, cannot send message");
-            return false;
-        }
-        ClientConnection connection = connectionManager.getClient(clientId);
-        if (connection != null) {
-            try {
-                boolean success = connection.sendMessage(message);
-                if (success) {
-                    connectionManager.recordMessageSent(clientId);
-                    return true;
-                } else {
-                    connectionManager.removeClient(clientId, "发送消息失败");
-                    return false;
-                }
-            } catch (Exception e) {
-                log.error("Error sending message to client: {}", clientId, e);
-                connectionManager.removeClient(clientId, "Error sending message");
-                return false;
-            }
-        } else {
-            log.warn("Client {} not found", clientId);
-            return false;
-        }
-    }
-    
-    /**
-     * send a message to all connected clients
-     */
-    public int broadcast(TunnelMessage message) {
-        List<String> failedClients = new ArrayList<>();
-
-        Collection<ClientConnection> allClients = connectionManager.getAllClients();
-        for (ClientConnection connection : allClients) {
-            boolean success = connection.sendMessage(message);
-            if (success) {
-                connectionManager.recordMessageSent(connection.getClientId());
-            } else {
-                log.error("Error broadcasting message to client: {}", connection.getClientId());
-                failedClients.add(connection.getClientId());
-            }
-		}
-        connectionManager.removeClients(failedClients, "Error broadcasting message");
-        log.info("Broadcast message sent to {} clients, failed for {} clients",
-                allClients.size() - failedClients.size(), failedClients.size());
-        return allClients.size() - failedClients.size();
-    }
-    
     /**
      * get all connected clients
      */

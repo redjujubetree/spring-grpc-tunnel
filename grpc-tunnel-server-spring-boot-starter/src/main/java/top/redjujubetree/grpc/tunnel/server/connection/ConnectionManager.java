@@ -26,6 +26,7 @@ public class ConnectionManager implements ClientManager {
     public ConnectionManager(List<ClientConnectionCloseListener> clientConnectionCloseListeners) {
         this.clientConnectionCloseListeners = clientConnectionCloseListeners != null ?
                 new ArrayList<>(clientConnectionCloseListeners) : new ArrayList<>();
+        clientConnectionCloseListeners.sort(Comparator.comparingInt(ClientConnectionCloseListener::getOrder));
     }
     @Override
     public void addClient(ClientConnection connection) {

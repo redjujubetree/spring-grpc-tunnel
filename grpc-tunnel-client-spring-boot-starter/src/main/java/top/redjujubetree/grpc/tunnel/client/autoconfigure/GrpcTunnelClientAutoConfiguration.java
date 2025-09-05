@@ -1,14 +1,5 @@
 package top.redjujubetree.grpc.tunnel.client.autoconfigure;
 
-import top.redjujubetree.grpc.tunnel.client.GrpcTunnelClientService;
-import top.redjujubetree.grpc.tunnel.client.config.GrpcTunnelClientProperties;
-import top.redjujubetree.grpc.tunnel.client.service.ClientInfoService;
-import top.redjujubetree.grpc.tunnel.client.service.DefaultClientInfoService;
-import top.redjujubetree.grpc.tunnel.client.service.DefaultHeartbeatService;
-import top.redjujubetree.grpc.tunnel.client.service.HeartbeatService;
-import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
-import top.redjujubetree.grpc.tunnel.generator.DefaultClientIdGenerator;
-import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.netty.shaded.io.grpc.netty.GrpcSslContexts;
@@ -21,7 +12,17 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
+import top.redjujubetree.grpc.tunnel.client.GrpcTunnelClientService;
+import top.redjujubetree.grpc.tunnel.client.config.GrpcTunnelClientProperties;
+import top.redjujubetree.grpc.tunnel.client.service.ClientInfoService;
+import top.redjujubetree.grpc.tunnel.client.service.DefaultClientInfoService;
+import top.redjujubetree.grpc.tunnel.client.service.DefaultHeartbeatService;
+import top.redjujubetree.grpc.tunnel.client.service.HeartbeatService;
+import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
+import top.redjujubetree.grpc.tunnel.generator.DefaultClientIdGenerator;
+import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 
 import java.io.File;
 import java.io.IOException;
@@ -159,7 +160,7 @@ public class GrpcTunnelClientAutoConfiguration {
             ManagedChannel grpcTunnelChannel,
             GrpcTunnelClientProperties properties,
             ClientIdGenerator clientIdGenerator,
-            @Autowired(required = false) List<MessageHandler> messageHandlers,
+            @Autowired @Lazy List<MessageHandler> messageHandlers,
             HeartbeatService heartbeatService, ClientInfoService clientInfoService) {
         
         return new GrpcTunnelClientService(
