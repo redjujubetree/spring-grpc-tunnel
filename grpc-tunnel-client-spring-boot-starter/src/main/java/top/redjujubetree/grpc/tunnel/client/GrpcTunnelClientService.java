@@ -298,7 +298,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
             Object heartbeatInfo = heartbeatService.generateHeartbeat(this.getClientId());
             log.debug("Sending heartbeat: message={}", heartbeatInfo);
 
-            CompletableFuture<TunnelMessage> future = sendRequest("HEARTBEAT", JsonUtil.toJson(heartbeatInfo));
+            CompletableFuture<TunnelMessage> future = sendRequest(ClientRequestTypes.HEARTBEAT, JsonUtil.toJson(heartbeatInfo));
             future.whenComplete((response, error) -> {
                 if (error != null) {
                     log.warn("Heartbeat send failed: {}", error.getMessage());
