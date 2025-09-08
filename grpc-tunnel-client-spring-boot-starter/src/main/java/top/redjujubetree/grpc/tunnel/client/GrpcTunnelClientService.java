@@ -33,12 +33,12 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
     private static final Logger log = LoggerFactory.getLogger(GrpcTunnelClientService.class);
     private static final int MAX_CONSECUTIVE_FAILURES = 3;
     // Injected dependencies
-    private final ManagedChannel channel;
-    private final GrpcTunnelClientProperties properties;
-    private final ClientIdGenerator clientIdGenerator;
-    private final List<MessageHandler> messageHandlers;
-    private final HeartbeatService heartbeatService;
-    private final ClientInfoService clientInfoService;
+    private ManagedChannel channel;
+    private GrpcTunnelClientProperties properties;
+    private ClientIdGenerator clientIdGenerator;
+    private List<MessageHandler> messageHandlers;
+    private HeartbeatService heartbeatService;
+    private ClientInfoService clientInfoService;
 
     // gRPC related
     private GrpcTunnelServiceGrpc.GrpcTunnelServiceStub tunnelStub;
@@ -61,6 +61,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
     private ScheduledFuture<?> heartbeatTask;
     private ScheduledFuture<?> reconnectTask;
 
+    public GrpcTunnelClientService(){}
     /**
      * Constructor to inject all necessary dependencies
      */
@@ -79,7 +80,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         this.clientId = clientIdGenerator.generate();
         this.tunnelStub = GrpcTunnelServiceGrpc.newStub(channel);
 
@@ -91,7 +92,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
     }
 
     @Override
-    public void destroy() throws Exception {
+    public void destroy() {
         isShuttingDown.set(true);
 
         disconnect();
@@ -378,7 +379,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
      */
     private void handleServerMsg(TunnelMessage message) {
         if (message == null) {
-            log.warn("Received invalid message: {}", message);
+            log.warn("Received invalid message, message is null");
             return;
         }
         if (MessageType.SERVER_RESPONSE.equals(message.getType())) {
@@ -393,7 +394,8 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
 
 
         // Handle request responses
-        if (Objects.nonNull(message.getCorrelationId()) && !message.getCorrelationId().isEmpty()) {
+		message.getCorrelationId();
+		if (!message.getCorrelationId().isEmpty()) {
             CompletableFuture<TunnelMessage> future = pendingRequests.remove(message.getCorrelationId());
             if (future != null) {
                 future.complete(message);
@@ -533,7 +535,9 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
         future.whenComplete((result, error) -> timeoutTask.cancel(false));
 
         try {
-            requestObserver.onNext(request);
+            synchronized (requestObserver) {
+                requestObserver.onNext(request);
+            }
             log.debug("Request sent: type={}, messageId={}", type, messageId);
         } catch (Exception e) {
             pendingRequests.remove(messageId);

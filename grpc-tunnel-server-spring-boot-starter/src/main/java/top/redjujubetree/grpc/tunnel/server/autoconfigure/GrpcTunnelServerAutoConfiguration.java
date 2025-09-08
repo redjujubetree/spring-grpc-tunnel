@@ -9,6 +9,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import top.redjujubetree.grpc.tunnel.server.GrpcTunnelServerService;
 import top.redjujubetree.grpc.tunnel.server.config.GrpcTunnelServerProperties;
@@ -70,7 +71,7 @@ public class GrpcTunnelServerAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ConnectionManager connectionManager(
-            List<ClientConnectionCloseListener> clientConnectionCloseListeners) {
+           @Lazy List<ClientConnectionCloseListener> clientConnectionCloseListeners) {
         return new ConnectionManager(clientConnectionCloseListeners);
     }
 }

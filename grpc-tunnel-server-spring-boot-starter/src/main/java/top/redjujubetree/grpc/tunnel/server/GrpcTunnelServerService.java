@@ -5,7 +5,6 @@ import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import lombok.Getter;
-import net.devh.boot.grpc.server.service.GrpcService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
@@ -35,7 +34,6 @@ import java.util.concurrent.TimeUnit;
  * GRPC Tunnel Server Service implementation.
  * This service handles client connections, message processing, and heartbeat management.
  */
-@GrpcService
 public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelServiceImplBase {
     
     private static final Logger log = LoggerFactory.getLogger(GrpcTunnelServerService.class);

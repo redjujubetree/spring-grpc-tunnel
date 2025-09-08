@@ -19,6 +19,7 @@ public class AckRequestMessageHandler extends AbstractServerRequestMessageHandle
 
 	@Override
 	protected ResponsePayload handleServerCommand(RequestPayload request) {
+		grpcTunnelClientService.sendOneWay("test one way message from client", "oneWayFromClient");
 		ResponsePayload.Builder builder = ResponsePayload.newBuilder();
 		builder.setCode(200).setType(request.getType()).setMessage("ack from client");
 		return builder.build();
