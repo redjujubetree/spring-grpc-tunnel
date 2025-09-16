@@ -5,8 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
-import top.redjujubetree.grpc.tunnel.generator.SingleIpClientIdGenerator;
 import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
 import top.redjujubetree.grpc.tunnel.server.handler.HeartbeatHandler;
 
@@ -14,12 +12,13 @@ import top.redjujubetree.grpc.tunnel.server.handler.HeartbeatHandler;
 public class TunnelServerConfiguration {
 
 	private Logger log = LoggerFactory.getLogger(this.getClass());
+
 	@Bean
 	public HeartbeatHandler heartbeatHandler() {
 		return new HeartbeatHandler() {
 			@Override
 			public void handleHeartbeat(TunnelMessage message) {
-
+				log.info("Received heartbeat request from client: {}", message.getClientId());
 			}
 
 			@Override
@@ -28,11 +27,6 @@ public class TunnelServerConfiguration {
 				log.error("deal heartbeat timeout, need to set the client offline");
 			}
 		};
-	}
-
-	@Bean
-	public ClientIdGenerator clientIdGenerator() {
-		return new SingleIpClientIdGenerator();
 	}
 
 }

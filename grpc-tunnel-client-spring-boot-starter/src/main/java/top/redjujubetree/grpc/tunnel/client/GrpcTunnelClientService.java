@@ -1,6 +1,7 @@
 package top.redjujubetree.grpc.tunnel.client;
 
 import com.google.protobuf.ByteString;
+import io.grpc.Channel;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -9,12 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import top.redjujubetree.grpc.tunnel.client.config.GrpcTunnelClientProperties;
+import top.redjujubetree.grpc.tunnel.client.config.TunnelProperties;
 import top.redjujubetree.grpc.tunnel.client.service.ClientInfoService;
 import top.redjujubetree.grpc.tunnel.client.service.DefaultHeartbeatService;
 import top.redjujubetree.grpc.tunnel.client.service.HeartbeatService;
 import top.redjujubetree.grpc.tunnel.constant.ClientRequestTypes;
-import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
 import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
 import top.redjujubetree.grpc.tunnel.proto.*;
@@ -34,8 +34,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
     private static final int MAX_CONSECUTIVE_FAILURES = 3;
     // Injected dependencies
     private ManagedChannel channel;
-    private GrpcTunnelClientProperties properties;
-    private ClientIdGenerator clientIdGenerator;
+    private TunnelProperties properties;
     private List<MessageHandler> messageHandlers;
     private HeartbeatService heartbeatService;
     private ClientInfoService clientInfoService;
@@ -66,22 +65,25 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
      * Constructor to inject all necessary dependencies
      */
     public GrpcTunnelClientService(ManagedChannel channel,
-                                   GrpcTunnelClientProperties properties,
-                                   ClientIdGenerator clientIdGenerator,
+                                   TunnelProperties properties,
+                                   String clientId,
                                    List<MessageHandler> messageHandlers,
                                    HeartbeatService heartbeatService,
                                    ClientInfoService clientInfoService) {
         this.channel = channel;
         this.properties = properties;
-        this.clientIdGenerator = clientIdGenerator;
+        this.clientId = clientId;
         this.messageHandlers = messageHandlers != null ? messageHandlers : Collections.emptyList();
         this.heartbeatService = heartbeatService != null ? heartbeatService : new DefaultHeartbeatService();
         this.clientInfoService = clientInfoService;
     }
 
+    public Channel getChannel() {
+        return channel;
+    }
+
     @Override
     public void afterPropertiesSet() {
-        this.clientId = clientIdGenerator.generate();
         this.tunnelStub = GrpcTunnelServiceGrpc.newStub(channel);
 
         log.info("GRPC Tunnel Client initialized with ID: {}", clientId);
@@ -136,7 +138,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
 
                 startHeartbeat();
 
-                log.info("Connected to server successfully");
+                log.info("{} Connected to server successfully", getClientId());
             } else {
                 log.warn("Connection validation failed");
                 connected.set(false);

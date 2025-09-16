@@ -23,7 +23,7 @@ public class BasicClientRegistrationFilter implements ClientRegisterFilter {
             return ConnectionResult.reject("Message or request is null");
         }
         log.info("BasicConnectionHandler: Received register request {} for clientId: {}", JsonUtil.toJson(registerRequest), clientId);
-        if (registerRequest == null || registerRequest.getClientId() == null) {
+        if (registerRequest == null || message.getClientId() == null) {
             return ConnectionResult.reject("Register request or client ID is null");
         }
 

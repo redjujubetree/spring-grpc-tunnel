@@ -2,9 +2,9 @@ package top.redjujubetree.demo.server.controller;
 
 import com.google.protobuf.ByteString;
 import lombok.Setter;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
 import top.redjujubetree.grpc.tunnel.proto.RequestPayload;
 import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
 import top.redjujubetree.grpc.tunnel.server.service.TunnelServerMessageService;
@@ -19,12 +19,9 @@ public class TestGrpcTunnelController {
 
 	@Resource
 	private TunnelServerMessageService tunnelServerMessageService;
-	@Resource
-	private ClientIdGenerator clientIdGenerator;
 
-	@RequestMapping("/notifyWithAck")
-	public String notifyWithAck() {
-		String clientId = clientIdGenerator.generate();
+	@RequestMapping("/notifyWithAck/{clientId}")
+	public String notifyWithAck(@PathVariable String clientId) {
 		TunnelMessage.Builder builder = TunnelMessage.newBuilder();
 		builder.setClientId(clientId);
 		builder.setMessageId(UUID.fromString("123e4567-e89b-12d3-a456-426614174000").toString());
