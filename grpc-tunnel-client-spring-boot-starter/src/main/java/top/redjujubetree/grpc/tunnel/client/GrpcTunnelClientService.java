@@ -18,7 +18,7 @@ import top.redjujubetree.grpc.tunnel.constant.ClientRequestTypes;
 import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
 import top.redjujubetree.grpc.tunnel.proto.*;
-import top.redjujubetree.grpc.tunnel.utils.JsonUtil;
+import top.redjujubetree.grpc.tunnel.utils.TunnelMessagesUtil;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -301,7 +301,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
             Object heartbeatInfo = heartbeatService.generateHeartbeat(this.getClientId());
             log.debug("Sending heartbeat: message={}", heartbeatInfo);
 
-            CompletableFuture<TunnelMessage> future = sendRequest(ClientRequestTypes.HEARTBEAT, JsonUtil.toJson(heartbeatInfo));
+            CompletableFuture<TunnelMessage> future = sendRequest(ClientRequestTypes.HEARTBEAT, TunnelMessagesUtil.serializeObj(heartbeatInfo));
             future.whenComplete((response, error) -> {
                 if (error != null) {
                     log.warn("Heartbeat send failed: {}", error.getMessage());
@@ -452,9 +452,9 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
      */
     private boolean sendConnectionMessage() {
         try {
-            RegisterRequest obj = clientInfoService.buildClentInfoPayload();
+            RegisterRequest obj = clientInfoService.buildClientInfoPayload(this);
             log.info("Sending connection message: {}", obj);
-            String clientPayload = JsonUtil.toJson(obj);
+            String clientPayload = TunnelMessagesUtil.serializeObj(obj);
             CompletableFuture<TunnelMessage> future = sendRequest(ClientRequestTypes.CONNECT, clientPayload, 5000);
             TunnelMessage response = future.get(6, TimeUnit.SECONDS); // Wait for connection confirmation
             log.info("Connection response received: {}", response.getResponse().getData().toStringUtf8());
@@ -676,7 +676,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
             return properties.getReconnectDelay();
         }
         // Use quadratic backoff instead of exponential for gentler growth
-        long delay = Math.max(properties.getReconnectDelay(), reconnectAttempts * reconnectAttempts * 1000);
+        long delay = Math.max(properties.getReconnectDelay(), reconnectAttempts * reconnectAttempts * 1000L);
         return Math.min(delay, properties.getMaxReconnectDelay());
     }
 
@@ -737,6 +737,10 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
         return clientId;
     }
 
+    public TunnelProperties getTunnelConfig() {
+        return properties;
+    }
+
     /**
      * Get current reconnection attempts count
      */
@@ -795,4 +799,5 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
 
         return status;
     }
+
 }

@@ -8,6 +8,8 @@ import lombok.Data;
 @Data
 public class TunnelProperties {
 
+    private String clientId;
+    private String clientName;
     /**
      * whether the client is enabled
      */

@@ -5,7 +5,7 @@ import top.redjujubetree.grpc.tunnel.proto.ResponsePayload;
 import top.redjujubetree.grpc.tunnel.server.handler.AbstractClientResponseMessageHandler;
 
 @Component
-public class ClientResponseAckHandler extends AbstractClientResponseMessageHandler {
+public class ClientResponseAckHandler extends AbstractClientResponseMessageHandler{
 
 	@Override
 	protected boolean supportsResponseType(String request) {

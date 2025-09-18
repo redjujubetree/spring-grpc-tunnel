@@ -27,7 +27,7 @@ public abstract class AbstractClientResponseMessageHandler implements MessageHan
 	@Override
 	public CompletableFuture<TunnelMessage> handle(TunnelMessage request) {
 		return CompletableFuture.supplyAsync(() -> {
-			ResponsePayload responsePayload = handleResponse(request.getResponse());
+			ResponsePayload responsePayload = handleResponse(request);
 			if (Objects.isNull(responsePayload)) {
 				return null;
 			}
@@ -44,11 +44,14 @@ public abstract class AbstractClientResponseMessageHandler implements MessageHan
 
 	/**
 	 * if the client does not need a response, return null
-	 * @param response
-	 * @return
 	 */
-	protected abstract ResponsePayload handleResponse(ResponsePayload response) ;
+	protected ResponsePayload handleResponse(ResponsePayload response) {
+		throw new UnsupportedOperationException(this.getClass().getName()+ " Not implemented handleResponse");
+	}
 
+	protected ResponsePayload handleResponse(TunnelMessage message) {
+		return handleResponse(message.getResponse());
+	}
 
 	@Override
 	public int getOrder() {

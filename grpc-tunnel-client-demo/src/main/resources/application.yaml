@@ -21,11 +21,11 @@ grpc:
       negotiation-type: plaintext
       tunnel:
         enabled: true
-#    tunnel-service1:
-#      address: static://localhost:9090
-#      negotiation-type: plaintext
-#      tunnel:
-#        enabled: true
+    tunnel-service1:
+      address: static://localhost:9090
+      negotiation-type: plaintext
+      tunnel:
+        enabled: true
 
 logging:
   level:

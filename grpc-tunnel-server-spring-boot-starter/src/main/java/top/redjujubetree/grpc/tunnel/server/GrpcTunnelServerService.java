@@ -20,7 +20,7 @@ import top.redjujubetree.grpc.tunnel.server.connection.ConnectionManager;
 import top.redjujubetree.grpc.tunnel.server.filter.ClientRegisterFilter;
 import top.redjujubetree.grpc.tunnel.server.handler.ConnectionResult;
 import top.redjujubetree.grpc.tunnel.server.handler.HeartbeatHandler;
-import top.redjujubetree.grpc.tunnel.utils.JsonUtil;
+import top.redjujubetree.grpc.tunnel.utils.TunnelMessagesUtil;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -154,10 +154,8 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
                         }
                     }
 
-                    // 更新活动时间和计数
                     connectionManager.recordMessageReceived(clientId);
 
-                    // 处理消息
                     processMessage(message, responseObserver);
 
                 } catch (Exception e) {
@@ -178,7 +176,7 @@ public class GrpcTunnelServerService extends GrpcTunnelServiceGrpc.GrpcTunnelSer
                     return false;
                 }
 
-                RegisterRequest registerRequest = JsonUtil.fromJson(message.getRequest().getData().toStringUtf8(), RegisterRequest.class);
+                RegisterRequest registerRequest = TunnelMessagesUtil.deserializeRequest(message.getRequest(), RegisterRequest.class);
                 Map<String, Object> metadata = new HashMap<>();
                 for (ClientRegisterFilter clientRegisterFilter : clientRegisterFilters) {
                     ConnectionResult connectionResult = clientRegisterFilter.doFilter(message, registerRequest);

@@ -10,7 +10,7 @@ import top.redjujubetree.grpc.tunnel.proto.ResponsePayload;
 @Component
 public class AckRequestMessageHandler extends AbstractServerRequestMessageHandler {
 
-	@GrpcClientTunnel
+	@GrpcClientTunnel("tunnel-service1")
 	private GrpcTunnelClientService grpcTunnelClientService;
 
 	@Override
