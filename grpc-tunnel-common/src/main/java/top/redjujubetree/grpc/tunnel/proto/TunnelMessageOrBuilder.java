@@ -9,19 +9,11 @@ public interface TunnelMessageOrBuilder extends
     com.google.protobuf.MessageOrBuilder {
 
   /**
-   * <pre>
-   * 消息ID
-   * </pre>
-   *
    * <code>string message_id = 1;</code>
    * @return The messageId.
    */
   java.lang.String getMessageId();
   /**
-   * <pre>
-   * 消息ID
-   * </pre>
-   *
    * <code>string message_id = 1;</code>
    * @return The bytes for messageId.
    */
@@ -29,19 +21,11 @@ public interface TunnelMessageOrBuilder extends
       getMessageIdBytes();
 
   /**
-   * <pre>
-   * 客户端ID
-   * </pre>
-   *
    * <code>string client_id = 2;</code>
    * @return The clientId.
    */
   java.lang.String getClientId();
   /**
-   * <pre>
-   * 客户端ID
-   * </pre>
-   *
    * <code>string client_id = 2;</code>
    * @return The bytes for clientId.
    */
@@ -49,102 +33,58 @@ public interface TunnelMessageOrBuilder extends
       getClientIdBytes();
 
   /**
-   * <pre>
-   * 消息类型
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.MessageType type = 3;</code>
    * @return The enum numeric value on the wire for type.
    */
   int getTypeValue();
   /**
-   * <pre>
-   * 消息类型
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.MessageType type = 3;</code>
    * @return The type.
    */
   top.redjujubetree.grpc.tunnel.proto.MessageType getType();
 
   /**
-   * <pre>
-   * 时间戳
-   * </pre>
-   *
    * <code>int64 timestamp = 4;</code>
    * @return The timestamp.
    */
   long getTimestamp();
 
   /**
-   * <pre>
-   * 消息载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
    * @return Whether the request field is set.
    */
   boolean hasRequest();
   /**
-   * <pre>
-   * 消息载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
    * @return The request.
    */
   top.redjujubetree.grpc.tunnel.proto.RequestPayload getRequest();
   /**
-   * <pre>
-   * 消息载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
    */
   top.redjujubetree.grpc.tunnel.proto.RequestPayloadOrBuilder getRequestOrBuilder();
 
   /**
-   * <pre>
-   * 响应载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
    * @return Whether the response field is set.
    */
   boolean hasResponse();
   /**
-   * <pre>
-   * 响应载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
    * @return The response.
    */
   top.redjujubetree.grpc.tunnel.proto.ResponsePayload getResponse();
   /**
-   * <pre>
-   * 响应载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
    */
   top.redjujubetree.grpc.tunnel.proto.ResponsePayloadOrBuilder getResponseOrBuilder();
 
   /**
-   * <pre>
-   * 关联ID，用于请求响应匹配
-   * </pre>
-   *
    * <code>string correlation_id = 7;</code>
    * @return The correlationId.
    */
   java.lang.String getCorrelationId();
   /**
-   * <pre>
-   * 关联ID，用于请求响应匹配
-   * </pre>
-   *
    * <code>string correlation_id = 7;</code>
    * @return The bytes for correlationId.
    */

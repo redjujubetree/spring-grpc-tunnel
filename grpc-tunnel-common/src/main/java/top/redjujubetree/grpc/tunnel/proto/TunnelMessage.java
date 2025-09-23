@@ -52,10 +52,6 @@ private static final long serialVersionUID = 0L;
   @SuppressWarnings("serial")
   private volatile java.lang.Object messageId_ = "";
   /**
-   * <pre>
-   * 消息ID
-   * </pre>
-   *
    * <code>string message_id = 1;</code>
    * @return The messageId.
    */
@@ -73,10 +69,6 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <pre>
-   * 消息ID
-   * </pre>
-   *
    * <code>string message_id = 1;</code>
    * @return The bytes for messageId.
    */
@@ -99,10 +91,6 @@ private static final long serialVersionUID = 0L;
   @SuppressWarnings("serial")
   private volatile java.lang.Object clientId_ = "";
   /**
-   * <pre>
-   * 客户端ID
-   * </pre>
-   *
    * <code>string client_id = 2;</code>
    * @return The clientId.
    */
@@ -120,10 +108,6 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <pre>
-   * 客户端ID
-   * </pre>
-   *
    * <code>string client_id = 2;</code>
    * @return The bytes for clientId.
    */
@@ -145,10 +129,6 @@ private static final long serialVersionUID = 0L;
   public static final int TYPE_FIELD_NUMBER = 3;
   private int type_ = 0;
   /**
-   * <pre>
-   * 消息类型
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.MessageType type = 3;</code>
    * @return The enum numeric value on the wire for type.
    */
@@ -156,10 +136,6 @@ private static final long serialVersionUID = 0L;
     return type_;
   }
   /**
-   * <pre>
-   * 消息类型
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.MessageType type = 3;</code>
    * @return The type.
    */
@@ -171,10 +147,6 @@ private static final long serialVersionUID = 0L;
   public static final int TIMESTAMP_FIELD_NUMBER = 4;
   private long timestamp_ = 0L;
   /**
-   * <pre>
-   * 时间戳
-   * </pre>
-   *
    * <code>int64 timestamp = 4;</code>
    * @return The timestamp.
    */
@@ -186,10 +158,6 @@ private static final long serialVersionUID = 0L;
   public static final int REQUEST_FIELD_NUMBER = 5;
   private top.redjujubetree.grpc.tunnel.proto.RequestPayload request_;
   /**
-   * <pre>
-   * 消息载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
    * @return Whether the request field is set.
    */
@@ -198,10 +166,6 @@ private static final long serialVersionUID = 0L;
     return ((bitField0_ & 0x00000001) != 0);
   }
   /**
-   * <pre>
-   * 消息载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
    * @return The request.
    */
@@ -210,10 +174,6 @@ private static final long serialVersionUID = 0L;
     return request_ == null ? top.redjujubetree.grpc.tunnel.proto.RequestPayload.getDefaultInstance() : request_;
   }
   /**
-   * <pre>
-   * 消息载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
    */
   @java.lang.Override
@@ -224,10 +184,6 @@ private static final long serialVersionUID = 0L;
   public static final int RESPONSE_FIELD_NUMBER = 6;
   private top.redjujubetree.grpc.tunnel.proto.ResponsePayload response_;
   /**
-   * <pre>
-   * 响应载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
    * @return Whether the response field is set.
    */
@@ -236,10 +192,6 @@ private static final long serialVersionUID = 0L;
     return ((bitField0_ & 0x00000002) != 0);
   }
   /**
-   * <pre>
-   * 响应载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
    * @return The response.
    */
@@ -248,10 +200,6 @@ private static final long serialVersionUID = 0L;
     return response_ == null ? top.redjujubetree.grpc.tunnel.proto.ResponsePayload.getDefaultInstance() : response_;
   }
   /**
-   * <pre>
-   * 响应载荷
-   * </pre>
-   *
    * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
    */
   @java.lang.Override
@@ -263,10 +211,6 @@ private static final long serialVersionUID = 0L;
   @SuppressWarnings("serial")
   private volatile java.lang.Object correlationId_ = "";
   /**
-   * <pre>
-   * 关联ID，用于请求响应匹配
-   * </pre>
-   *
    * <code>string correlation_id = 7;</code>
    * @return The correlationId.
    */
@@ -284,10 +228,6 @@ private static final long serialVersionUID = 0L;
     }
   }
   /**
-   * <pre>
-   * 关联ID，用于请求响应匹配
-   * </pre>
-   *
    * <code>string correlation_id = 7;</code>
    * @return The bytes for correlationId.
    */
@@ -815,10 +755,6 @@ private static final long serialVersionUID = 0L;
 
     private java.lang.Object messageId_ = "";
     /**
-     * <pre>
-     * 消息ID
-     * </pre>
-     *
      * <code>string message_id = 1;</code>
      * @return The messageId.
      */
@@ -835,10 +771,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * 消息ID
-     * </pre>
-     *
      * <code>string message_id = 1;</code>
      * @return The bytes for messageId.
      */
@@ -856,10 +788,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * 消息ID
-     * </pre>
-     *
      * <code>string message_id = 1;</code>
      * @param value The messageId to set.
      * @return This builder for chaining.
@@ -873,10 +801,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 消息ID
-     * </pre>
-     *
      * <code>string message_id = 1;</code>
      * @return This builder for chaining.
      */
@@ -887,10 +811,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 消息ID
-     * </pre>
-     *
      * <code>string message_id = 1;</code>
      * @param value The bytes for messageId to set.
      * @return This builder for chaining.
@@ -907,10 +827,6 @@ private static final long serialVersionUID = 0L;
 
     private java.lang.Object clientId_ = "";
     /**
-     * <pre>
-     * 客户端ID
-     * </pre>
-     *
      * <code>string client_id = 2;</code>
      * @return The clientId.
      */
@@ -927,10 +843,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * 客户端ID
-     * </pre>
-     *
      * <code>string client_id = 2;</code>
      * @return The bytes for clientId.
      */
@@ -948,10 +860,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * 客户端ID
-     * </pre>
-     *
      * <code>string client_id = 2;</code>
      * @param value The clientId to set.
      * @return This builder for chaining.
@@ -965,10 +873,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 客户端ID
-     * </pre>
-     *
      * <code>string client_id = 2;</code>
      * @return This builder for chaining.
      */
@@ -979,10 +883,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 客户端ID
-     * </pre>
-     *
      * <code>string client_id = 2;</code>
      * @param value The bytes for clientId to set.
      * @return This builder for chaining.
@@ -999,10 +899,6 @@ private static final long serialVersionUID = 0L;
 
     private int type_ = 0;
     /**
-     * <pre>
-     * 消息类型
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.MessageType type = 3;</code>
      * @return The enum numeric value on the wire for type.
      */
@@ -1010,10 +906,6 @@ private static final long serialVersionUID = 0L;
       return type_;
     }
     /**
-     * <pre>
-     * 消息类型
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.MessageType type = 3;</code>
      * @param value The enum numeric value on the wire for type to set.
      * @return This builder for chaining.
@@ -1025,10 +917,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 消息类型
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.MessageType type = 3;</code>
      * @return The type.
      */
@@ -1038,10 +926,6 @@ private static final long serialVersionUID = 0L;
       return result == null ? top.redjujubetree.grpc.tunnel.proto.MessageType.UNRECOGNIZED : result;
     }
     /**
-     * <pre>
-     * 消息类型
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.MessageType type = 3;</code>
      * @param value The type to set.
      * @return This builder for chaining.
@@ -1056,10 +940,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 消息类型
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.MessageType type = 3;</code>
      * @return This builder for chaining.
      */
@@ -1072,10 +952,6 @@ private static final long serialVersionUID = 0L;
 
     private long timestamp_ ;
     /**
-     * <pre>
-     * 时间戳
-     * </pre>
-     *
      * <code>int64 timestamp = 4;</code>
      * @return The timestamp.
      */
@@ -1084,10 +960,6 @@ private static final long serialVersionUID = 0L;
       return timestamp_;
     }
     /**
-     * <pre>
-     * 时间戳
-     * </pre>
-     *
      * <code>int64 timestamp = 4;</code>
      * @param value The timestamp to set.
      * @return This builder for chaining.
@@ -1100,10 +972,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 时间戳
-     * </pre>
-     *
      * <code>int64 timestamp = 4;</code>
      * @return This builder for chaining.
      */
@@ -1118,10 +986,6 @@ private static final long serialVersionUID = 0L;
     private com.google.protobuf.SingleFieldBuilderV3<
         top.redjujubetree.grpc.tunnel.proto.RequestPayload, top.redjujubetree.grpc.tunnel.proto.RequestPayload.Builder, top.redjujubetree.grpc.tunnel.proto.RequestPayloadOrBuilder> requestBuilder_;
     /**
-     * <pre>
-     * 消息载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
      * @return Whether the request field is set.
      */
@@ -1129,10 +993,6 @@ private static final long serialVersionUID = 0L;
       return ((bitField0_ & 0x00000010) != 0);
     }
     /**
-     * <pre>
-     * 消息载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
      * @return The request.
      */
@@ -1144,10 +1004,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * 消息载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
      */
     public Builder setRequest(top.redjujubetree.grpc.tunnel.proto.RequestPayload value) {
@@ -1164,10 +1020,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 消息载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
      */
     public Builder setRequest(
@@ -1182,10 +1034,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 消息载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
      */
     public Builder mergeRequest(top.redjujubetree.grpc.tunnel.proto.RequestPayload value) {
@@ -1207,10 +1055,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 消息载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
      */
     public Builder clearRequest() {
@@ -1224,10 +1068,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 消息载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
      */
     public top.redjujubetree.grpc.tunnel.proto.RequestPayload.Builder getRequestBuilder() {
@@ -1236,10 +1076,6 @@ private static final long serialVersionUID = 0L;
       return getRequestFieldBuilder().getBuilder();
     }
     /**
-     * <pre>
-     * 消息载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
      */
     public top.redjujubetree.grpc.tunnel.proto.RequestPayloadOrBuilder getRequestOrBuilder() {
@@ -1251,10 +1087,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * 消息载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.RequestPayload request = 5;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
@@ -1275,10 +1107,6 @@ private static final long serialVersionUID = 0L;
     private com.google.protobuf.SingleFieldBuilderV3<
         top.redjujubetree.grpc.tunnel.proto.ResponsePayload, top.redjujubetree.grpc.tunnel.proto.ResponsePayload.Builder, top.redjujubetree.grpc.tunnel.proto.ResponsePayloadOrBuilder> responseBuilder_;
     /**
-     * <pre>
-     * 响应载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
      * @return Whether the response field is set.
      */
@@ -1286,10 +1114,6 @@ private static final long serialVersionUID = 0L;
       return ((bitField0_ & 0x00000020) != 0);
     }
     /**
-     * <pre>
-     * 响应载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
      * @return The response.
      */
@@ -1301,10 +1125,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * 响应载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
      */
     public Builder setResponse(top.redjujubetree.grpc.tunnel.proto.ResponsePayload value) {
@@ -1321,10 +1141,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 响应载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
      */
     public Builder setResponse(
@@ -1339,10 +1155,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 响应载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
      */
     public Builder mergeResponse(top.redjujubetree.grpc.tunnel.proto.ResponsePayload value) {
@@ -1364,10 +1176,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 响应载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
      */
     public Builder clearResponse() {
@@ -1381,10 +1189,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 响应载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
      */
     public top.redjujubetree.grpc.tunnel.proto.ResponsePayload.Builder getResponseBuilder() {
@@ -1393,10 +1197,6 @@ private static final long serialVersionUID = 0L;
       return getResponseFieldBuilder().getBuilder();
     }
     /**
-     * <pre>
-     * 响应载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
      */
     public top.redjujubetree.grpc.tunnel.proto.ResponsePayloadOrBuilder getResponseOrBuilder() {
@@ -1408,10 +1208,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * 响应载荷
-     * </pre>
-     *
      * <code>.top.redjujubetree.tunnel.grpc.ResponsePayload response = 6;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
@@ -1430,10 +1226,6 @@ private static final long serialVersionUID = 0L;
 
     private java.lang.Object correlationId_ = "";
     /**
-     * <pre>
-     * 关联ID，用于请求响应匹配
-     * </pre>
-     *
      * <code>string correlation_id = 7;</code>
      * @return The correlationId.
      */
@@ -1450,10 +1242,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * 关联ID，用于请求响应匹配
-     * </pre>
-     *
      * <code>string correlation_id = 7;</code>
      * @return The bytes for correlationId.
      */
@@ -1471,10 +1259,6 @@ private static final long serialVersionUID = 0L;
       }
     }
     /**
-     * <pre>
-     * 关联ID，用于请求响应匹配
-     * </pre>
-     *
      * <code>string correlation_id = 7;</code>
      * @param value The correlationId to set.
      * @return This builder for chaining.
@@ -1488,10 +1272,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 关联ID，用于请求响应匹配
-     * </pre>
-     *
      * <code>string correlation_id = 7;</code>
      * @return This builder for chaining.
      */
@@ -1502,10 +1282,6 @@ private static final long serialVersionUID = 0L;
       return this;
     }
     /**
-     * <pre>
-     * 关联ID，用于请求响应匹配
-     * </pre>
-     *
      * <code>string correlation_id = 7;</code>
      * @param value The bytes for correlationId to set.
      * @return This builder for chaining.

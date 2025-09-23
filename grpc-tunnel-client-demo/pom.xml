@@ -6,12 +6,13 @@
     <parent>
         <groupId>top.redjujubetree</groupId>
         <artifactId>spring-grpc-tunnel</artifactId>
-        <version>1.0.6-RELEASE</version>
+        <version>0.0.1</version>
     </parent>
 
     <artifactId>grpc-tunnel-client-demo</artifactId>
 
     <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
 
     <dependencies>

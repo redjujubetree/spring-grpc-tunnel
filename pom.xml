@@ -4,7 +4,7 @@
 
 	<groupId>top.redjujubetree</groupId>
 	<artifactId>spring-grpc-tunnel</artifactId>
-	<version>1.0.6-RELEASE</version>
+	<version>0.0.1</version>
 	<packaging>pom</packaging>
 
 	<modelVersion>4.0.0</modelVersion>
@@ -34,8 +34,6 @@
         <module>grpc-tunnel-common</module>
 		<module>grpc-tunnel-server-spring-boot-starter</module>
 		<module>grpc-tunnel-client-spring-boot-starter</module>
-		<module>grpc-tunnel-client-demo</module>
-		<module>grpc-tunnel-server-demo</module>
 	</modules>
 
 	<scm>
@@ -44,7 +42,7 @@
 		<url>https://github.com/redjujubetree/spring-grpc-tunnel</url>
 	</scm>
 	<properties>
-		<tunnel.project.version>1.0.6-RELEASE</tunnel.project.version>
+		<tunnel.project.version>0.0.1</tunnel.project.version>
 		<lombok.version>1.18.30</lombok.version>
 		<grpc.spring-boot.version>2.15.0.RELEASE</grpc.spring-boot.version>
 		<spring-cloud.version>2021.0.9</spring-cloud.version>
@@ -114,22 +112,7 @@
 	</distributionManagement>
 	<build>
 		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>3.3.1</version>
-				<configuration>
-					<overwrite>true</overwrite>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.22.2</version>
-				<configuration>
-					<skip>true</skip>
-				</configuration>
-			</plugin>
+			<!-- Source JAR -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
@@ -139,6 +122,20 @@
 						<id>attach-sources</id>
 						<goals>
 							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<!-- Javadoc JAR -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.6.0</version>
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
 						</goals>
 					</execution>
 				</executions>
@@ -162,19 +159,29 @@
 				</configuration>
 			</plugin>
 
-			<!-- Sonatype 发布插件 -->
+			<!-- Central deploy -->
 			<plugin>
-				<groupId>org.sonatype.plugins</groupId>
-				<artifactId>nexus-staging-maven-plugin</artifactId>
-				<version>1.6.13</version>
+				<groupId>org.sonatype.central</groupId>
+				<artifactId>central-publishing-maven-plugin</artifactId>
+				<version>0.4.0</version>
 				<extensions>true</extensions>
 				<configuration>
-					<serverId>ossrh</serverId>
-					<nexusUrl>https://oss.sonatype.org/</nexusUrl>
-					<autoReleaseAfterClose>true</autoReleaseAfterClose>
+					<publishingServerId>central</publishingServerId>
+					<tokenAuth>true</tokenAuth>
+					<autoPublish>true</autoPublish>
 				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+	<profiles>
+		<profile>
+			<id>release</id>
+			<modules>
+				<module>grpc-tunnel-common</module>
+				<module>grpc-tunnel-server-spring-boot-starter</module>
+				<module>grpc-tunnel-client-spring-boot-starter</module>
+			</modules>
+		</profile>
+	</profiles>
 
 </project>
