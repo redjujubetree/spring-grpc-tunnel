@@ -8,7 +8,6 @@ import java.util.Map;
 @Data
 @ToString
 public class RegisterRequest{
-	private String clientId;
 	private String clientName;
 	private String serverMachineName;
 	private String clientVersion;

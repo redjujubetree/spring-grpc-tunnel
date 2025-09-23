@@ -1,10 +1,11 @@
-package top.redjujubetree.grpc.tunnel.generator;
+package top.redjujubetree.grpc.tunnel.client.id;
 
+import top.redjujubetree.grpc.tunnel.client.config.TunnelProperties;
 import top.redjujubetree.grpc.tunnel.utils.IpUtil;
 
 public class SingleIpClientIdGenerator implements ClientIdGenerator {
 	@Override
-	public String generate() {
+	public String generate(String clientName, TunnelProperties properties) {
 		try {
 			String ip = IpUtil.getBestIpv4();
 			return ip.replace(".", "_");

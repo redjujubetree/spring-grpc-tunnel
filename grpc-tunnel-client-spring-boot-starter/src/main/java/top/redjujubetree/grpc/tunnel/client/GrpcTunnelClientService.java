@@ -1,6 +1,7 @@
 package top.redjujubetree.grpc.tunnel.client;
 
 import com.google.protobuf.ByteString;
+import io.grpc.Channel;
 import io.grpc.ManagedChannel;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -9,16 +10,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import top.redjujubetree.grpc.tunnel.client.config.GrpcTunnelClientProperties;
+import top.redjujubetree.grpc.tunnel.client.config.TunnelProperties;
 import top.redjujubetree.grpc.tunnel.client.service.ClientInfoService;
 import top.redjujubetree.grpc.tunnel.client.service.DefaultHeartbeatService;
 import top.redjujubetree.grpc.tunnel.client.service.HeartbeatService;
 import top.redjujubetree.grpc.tunnel.constant.ClientRequestTypes;
-import top.redjujubetree.grpc.tunnel.generator.ClientIdGenerator;
 import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
 import top.redjujubetree.grpc.tunnel.proto.*;
-import top.redjujubetree.grpc.tunnel.utils.JsonUtil;
+import top.redjujubetree.grpc.tunnel.utils.TunnelMessagesUtil;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -33,12 +33,11 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
     private static final Logger log = LoggerFactory.getLogger(GrpcTunnelClientService.class);
     private static final int MAX_CONSECUTIVE_FAILURES = 3;
     // Injected dependencies
-    private final ManagedChannel channel;
-    private final GrpcTunnelClientProperties properties;
-    private final ClientIdGenerator clientIdGenerator;
-    private final List<MessageHandler> messageHandlers;
-    private final HeartbeatService heartbeatService;
-    private final ClientInfoService clientInfoService;
+    private ManagedChannel channel;
+    private TunnelProperties properties;
+    private List<MessageHandler> messageHandlers;
+    private HeartbeatService heartbeatService;
+    private ClientInfoService clientInfoService;
 
     // gRPC related
     private GrpcTunnelServiceGrpc.GrpcTunnelServiceStub tunnelStub;
@@ -61,26 +60,30 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
     private ScheduledFuture<?> heartbeatTask;
     private ScheduledFuture<?> reconnectTask;
 
+    public GrpcTunnelClientService(){}
     /**
      * Constructor to inject all necessary dependencies
      */
     public GrpcTunnelClientService(ManagedChannel channel,
-                                   GrpcTunnelClientProperties properties,
-                                   ClientIdGenerator clientIdGenerator,
+                                   TunnelProperties properties,
+                                   String clientId,
                                    List<MessageHandler> messageHandlers,
                                    HeartbeatService heartbeatService,
                                    ClientInfoService clientInfoService) {
         this.channel = channel;
         this.properties = properties;
-        this.clientIdGenerator = clientIdGenerator;
+        this.clientId = clientId;
         this.messageHandlers = messageHandlers != null ? messageHandlers : Collections.emptyList();
         this.heartbeatService = heartbeatService != null ? heartbeatService : new DefaultHeartbeatService();
         this.clientInfoService = clientInfoService;
     }
 
+    public Channel getChannel() {
+        return channel;
+    }
+
     @Override
-    public void afterPropertiesSet() throws Exception {
-        this.clientId = clientIdGenerator.generate();
+    public void afterPropertiesSet() {
         this.tunnelStub = GrpcTunnelServiceGrpc.newStub(channel);
 
         log.info("GRPC Tunnel Client initialized with ID: {}", clientId);
@@ -91,7 +94,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
     }
 
     @Override
-    public void destroy() throws Exception {
+    public void destroy() {
         isShuttingDown.set(true);
 
         disconnect();
@@ -135,7 +138,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
 
                 startHeartbeat();
 
-                log.info("Connected to server successfully");
+                log.info("{} Connected to server successfully", getClientId());
             } else {
                 log.warn("Connection validation failed");
                 connected.set(false);
@@ -298,7 +301,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
             Object heartbeatInfo = heartbeatService.generateHeartbeat(this.getClientId());
             log.debug("Sending heartbeat: message={}", heartbeatInfo);
 
-            CompletableFuture<TunnelMessage> future = sendRequest("HEARTBEAT", JsonUtil.toJson(heartbeatInfo));
+            CompletableFuture<TunnelMessage> future = sendRequest(ClientRequestTypes.HEARTBEAT, TunnelMessagesUtil.serializeObj(heartbeatInfo));
             future.whenComplete((response, error) -> {
                 if (error != null) {
                     log.warn("Heartbeat send failed: {}", error.getMessage());
@@ -378,7 +381,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
      */
     private void handleServerMsg(TunnelMessage message) {
         if (message == null) {
-            log.warn("Received invalid message: {}", message);
+            log.warn("Received invalid message, message is null");
             return;
         }
         if (MessageType.SERVER_RESPONSE.equals(message.getType())) {
@@ -393,7 +396,8 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
 
 
         // Handle request responses
-        if (Objects.nonNull(message.getCorrelationId()) && !message.getCorrelationId().isEmpty()) {
+		message.getCorrelationId();
+		if (!message.getCorrelationId().isEmpty()) {
             CompletableFuture<TunnelMessage> future = pendingRequests.remove(message.getCorrelationId());
             if (future != null) {
                 future.complete(message);
@@ -448,9 +452,9 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
      */
     private boolean sendConnectionMessage() {
         try {
-            RegisterRequest obj = clientInfoService.buildClentInfoPayload();
+            RegisterRequest obj = clientInfoService.buildClientInfoPayload(this);
             log.info("Sending connection message: {}", obj);
-            String clientPayload = JsonUtil.toJson(obj);
+            String clientPayload = TunnelMessagesUtil.serializeObj(obj);
             CompletableFuture<TunnelMessage> future = sendRequest(ClientRequestTypes.CONNECT, clientPayload, 5000);
             TunnelMessage response = future.get(6, TimeUnit.SECONDS); // Wait for connection confirmation
             log.info("Connection response received: {}", response.getResponse().getData().toStringUtf8());
@@ -460,7 +464,12 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
             return success;
 
         } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+            if (e.getCause() instanceof TimeoutException) {
+                log.warn("Connection validation timed out. Message: {}", e.getCause().getMessage());
+            } else {
+                log.error("Connection validation failed", e.getCause());
+            }
+            return false;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -528,7 +537,9 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
         future.whenComplete((result, error) -> timeoutTask.cancel(false));
 
         try {
-            requestObserver.onNext(request);
+            synchronized (requestObserver) {
+                requestObserver.onNext(request);
+            }
             log.debug("Request sent: type={}, messageId={}", type, messageId);
         } catch (Exception e) {
             pendingRequests.remove(messageId);
@@ -665,7 +676,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
             return properties.getReconnectDelay();
         }
         // Use quadratic backoff instead of exponential for gentler growth
-        long delay = Math.max(properties.getReconnectDelay(), reconnectAttempts * reconnectAttempts * 1000);
+        long delay = Math.max(properties.getReconnectDelay(), reconnectAttempts * reconnectAttempts * 1000L);
         return Math.min(delay, properties.getMaxReconnectDelay());
     }
 
@@ -726,6 +737,10 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
         return clientId;
     }
 
+    public TunnelProperties getTunnelConfig() {
+        return properties;
+    }
+
     /**
      * Get current reconnection attempts count
      */
@@ -784,4 +799,5 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
 
         return status;
     }
+
 }

@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import top.redjujubetree.grpc.tunnel.constant.ClientRequestTypes;
 import top.redjujubetree.grpc.tunnel.proto.RequestPayload;
 import top.redjujubetree.grpc.tunnel.proto.ResponsePayload;
-import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
 
 /**
  * Default implementation of DisconnectedHandler that handles DISCONNECT requests.
@@ -24,9 +23,4 @@ public class DefaultDisconnectedHandler extends AbstractClientRequestMessageHand
 		return null;
 	}
 
-	protected ResponsePayload handleRequest(TunnelMessage request) {
-		String mapStr = request.getRequest().getData().toStringUtf8();
-		log.info("handleRequest for disconnect : {}", mapStr);
-		return null;
-	}
 }

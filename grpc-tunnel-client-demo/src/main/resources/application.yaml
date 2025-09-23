@@ -16,13 +16,16 @@ management:
 # application.yml
 grpc:
   client:
-    grpc-tunnel-client:  # 定义一个channel
+    tunnel-service:
       address: static://localhost:9090
       negotiation-type: plaintext
-  tunnel:
-    client:
-      enabled: true
-      channel-name: "grpc-tunnel-client"  # 引用上面定义的channel
+      tunnel:
+        enabled: true
+    tunnel-service1:
+      address: static://localhost:9090
+      negotiation-type: plaintext
+      tunnel:
+        enabled: true
 
 logging:
   level:

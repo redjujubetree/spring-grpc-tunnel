@@ -7,8 +7,10 @@
     <parent>
         <groupId>top.redjujubetree</groupId>
         <artifactId>spring-grpc-tunnel</artifactId>
-        <version>0.8-RELEASE</version>
+        <version>0.0.1</version>
     </parent>
+
+    <name>GRPC Tunnel Server Spring Boot Starter</name>
 
     <artifactId>grpc-tunnel-server-spring-boot-starter</artifactId>
 
@@ -23,6 +25,14 @@
             <groupId>net.devh</groupId>
             <artifactId>grpc-server-spring-boot-starter</artifactId>
         </dependency>
-
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

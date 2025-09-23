@@ -7,7 +7,7 @@ import top.redjujubetree.grpc.tunnel.constant.ClientRequestTypes;
 import top.redjujubetree.grpc.tunnel.payload.RegisterRequest;
 import top.redjujubetree.grpc.tunnel.proto.TunnelMessage;
 import top.redjujubetree.grpc.tunnel.server.handler.ConnectionResult;
-import top.redjujubetree.grpc.tunnel.utils.JsonUtil;
+import top.redjujubetree.grpc.tunnel.utils.TunnelMessagesUtil;
 
 public class BasicClientRegistrationFilter implements ClientRegisterFilter {
 
@@ -22,8 +22,8 @@ public class BasicClientRegistrationFilter implements ClientRegisterFilter {
         if (message == null || !message.hasRequest() || message.getRequest() == null) {
             return ConnectionResult.reject("Message or request is null");
         }
-        log.info("BasicConnectionHandler: Received register request {} for clientId: {}", JsonUtil.toJson(registerRequest), clientId);
-        if (registerRequest == null || registerRequest.getClientId() == null) {
+        log.info("BasicConnectionHandler: Received register request {} for clientId: {}", TunnelMessagesUtil.serializeObj(registerRequest), clientId);
+        if (registerRequest == null || message.getClientId() == null) {
             return ConnectionResult.reject("Register request or client ID is null");
         }
 

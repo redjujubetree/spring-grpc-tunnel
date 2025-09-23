@@ -9,9 +9,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import top.redjujubetree.grpc.tunnel.handler.MessageHandler;
 import top.redjujubetree.grpc.tunnel.server.GrpcTunnelServerService;
 import top.redjujubetree.grpc.tunnel.server.config.GrpcTunnelServerProperties;
+import top.redjujubetree.grpc.tunnel.server.connection.ConnectionManager;
 import top.redjujubetree.grpc.tunnel.server.filter.BasicClientRegistrationFilter;
 import top.redjujubetree.grpc.tunnel.server.filter.ClientRegisterFilter;
 import top.redjujubetree.grpc.tunnel.server.handler.*;
@@ -24,7 +26,7 @@ import java.util.List;
 @ConditionalOnClass(GrpcServerAutoConfiguration.class)
 @AutoConfigureAfter(GrpcServerAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "grpc.tunnel.server", name = "enabled", havingValue = "true", matchIfMissing = true)
-@ComponentScan(basePackages = "com.redjujubetree.grpc.tunnel.server")
+@ComponentScan(basePackages = "top.redjujubetree.grpc.tunnel.server")
 public class GrpcTunnelServerAutoConfiguration {
 
     @Bean
@@ -54,15 +56,22 @@ public class GrpcTunnelServerAutoConfiguration {
     public GrpcTunnelServerService grpcTunnelServerService(
             GrpcTunnelServerProperties properties,
             List<ClientRegisterFilter> clientRegisterFilters,
-            List<ClientConnectionCloseListener> clientConnectionCloseListeners,
+            ConnectionManager connectionManager,
             List<MessageHandler> messageHandlers,
             HeartbeatHandler heartbeatHandler) {
         return new GrpcTunnelServerService(
                 properties,
                 clientRegisterFilters,
-                clientConnectionCloseListeners,
+                connectionManager,
                 messageHandlers,
                 heartbeatHandler
         );
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public ConnectionManager connectionManager(
+           @Lazy List<ClientConnectionCloseListener> clientConnectionCloseListeners) {
+        return new ConnectionManager(clientConnectionCloseListeners);
     }
 }

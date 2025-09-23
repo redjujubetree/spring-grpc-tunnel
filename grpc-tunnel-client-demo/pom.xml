@@ -6,15 +6,21 @@
     <parent>
         <groupId>top.redjujubetree</groupId>
         <artifactId>spring-grpc-tunnel</artifactId>
-        <version>0.8-RELEASE</version>
+        <version>0.0.1</version>
     </parent>
 
     <artifactId>grpc-tunnel-client-demo</artifactId>
 
     <properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.google.api.grpc</groupId>
+            <artifactId>proto-google-common-protos</artifactId>
+            <version>2.22.0</version>
+        </dependency>
         <!-- Spring Boot Starter Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -6,8 +6,9 @@
     <parent>
         <groupId>top.redjujubetree</groupId>
         <artifactId>spring-grpc-tunnel</artifactId>
-        <version>0.8-RELEASE</version>
+        <version>0.0.1</version>
     </parent>
+    <name>GRPC Tunnel Common</name>
 
     <artifactId>grpc-tunnel-common</artifactId>
 
@@ -47,6 +48,11 @@
             <version>1.9.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.15.2</version>
+        </dependency>
     </dependencies>
     <build>
         <extensions>
@@ -57,6 +63,10 @@
             </extension>
         </extensions>
         <plugins>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+            </plugin>
             <plugin>
                 <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
