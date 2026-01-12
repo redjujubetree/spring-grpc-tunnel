@@ -60,6 +60,14 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
     private ScheduledFuture<?> heartbeatTask;
     private ScheduledFuture<?> reconnectTask;
 
+    private final BlockingQueue<TunnelMessage> sendQueue = new LinkedBlockingQueue<>();
+    private final ExecutorService sendExecutor =
+            Executors.newSingleThreadExecutor(r -> {
+                Thread t = new Thread(r, "grpc-send-thread");
+                t.setDaemon(true);
+                return t;
+            });
+
     public GrpcTunnelClientService(){}
     /**
      * Constructor to inject all necessary dependencies
@@ -105,6 +113,32 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
         log.info("GRPC Tunnel Client destroyed");
     }
 
+    private void startSendLoop() {
+        sendExecutor.execute(() -> {
+            while (!isShuttingDown.get()) {
+                try {
+                    TunnelMessage msg = sendQueue.take();
+                    if (requestObserver != null && connected.get()) {
+                        requestObserver.onNext(msg);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                } catch (Exception e) {
+                    log.error("Send loop error", e);
+                }
+            }
+        });
+    }
+
+    private void enqueueSend(TunnelMessage message) {
+        if (!connected.get()) {
+            log.warn("Drop message, not connected");
+            return;
+        }
+        sendQueue.offer(message);
+    }
+
     // ==================== Connection Management ====================
 
     /**
@@ -130,6 +164,8 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
 
             // Set connected to true temporarily to allow sendRequest to work
             connected.set(true);
+            // start send thread
+            startSendLoop();
 
             if (sendConnectionMessage()) {
                 reconnectAttempts = 0;
@@ -412,13 +448,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
                         if (error != null) {
                             log.error("Handler error", error);
                         } else if (response != null) {
-                            try {
-                                if (requestObserver != null && connected.get()) {
-                                    requestObserver.onNext(response);
-                                }
-                            } catch (Exception e) {
-                                log.error("Failed to send response", e);
-                            }
+                            enqueueSend(response);
                         }
                     });
                     break;
@@ -537,9 +567,7 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
         future.whenComplete((result, error) -> timeoutTask.cancel(false));
 
         try {
-            synchronized (requestObserver) {
-                requestObserver.onNext(request);
-            }
+            enqueueSend(request);
             log.debug("Request sent: type={}, messageId={}", type, messageId);
         } catch (Exception e) {
             pendingRequests.remove(messageId);
@@ -570,12 +598,8 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
                         .build())
                 .build();
 
-        try {
-            requestObserver.onNext(message);
-            log.debug("One-way message sent: type={}", type);
-        } catch (Exception e) {
-            log.error("Failed to send one-way message", e);
-        }
+        enqueueSend(message);
+        log.debug("One-way message sent: type={}", type);
     }
 
     // ==================== Reconnection Mechanism ====================
@@ -772,7 +796,6 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
         if (lastResponse > 0) {
             health.put("timeSinceLastResponse", now - lastResponse);
         }
-
         return health;
     }
 
@@ -796,7 +819,6 @@ public class GrpcTunnelClientService implements InitializingBean, DisposableBean
                 status.put("remainingDelay", "unknown");
             }
         }
-
         return status;
     }
 

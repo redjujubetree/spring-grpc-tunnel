@@ -6,7 +6,7 @@
     <parent>
         <groupId>top.redjujubetree</groupId>
         <artifactId>spring-grpc-tunnel</artifactId>
-        <version>0.0.1</version>
+        <version>0.0.4</version>
     </parent>
     <name>GRPC Tunnel Common</name>
 
@@ -14,6 +14,14 @@
 
     <properties>
     </properties>
+
+    <url>https://github.com/redjujubetree/spring-grpc-tunnel</url>
+
+    <scm>
+        <connection>scm:git:https://github.com/redjujubetree/spring-grpc-tunnel.git</connection>
+        <developerConnection>scm:git:git@github.com:redjujubetree/spring-grpc-tunnel.git</developerConnection>
+        <url>https://github.com/redjujubetree/spring-grpc-tunnel</url>
+    </scm>
     <dependencies>
         <dependency>
             <groupId>io.grpc</groupId>
@@ -76,7 +84,7 @@
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:1.64.0:exe:${os.detected.classifier}</pluginArtifact>
                     <outputDirectory>${project.basedir}/src/main/java</outputDirectory>
-                    <clearOutputDirectory>${project.basedir}/src/main/java/top/redjujubetree/tunnel/grpc</clearOutputDirectory>
+                    <clearOutputDirectory>true</clearOutputDirectory>
                 </configuration>
                 <executions>
                     <execution>

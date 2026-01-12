@@ -6,7 +6,7 @@
     <parent>
         <groupId>top.redjujubetree</groupId>
         <artifactId>spring-grpc-tunnel</artifactId>
-        <version>0.0.1</version>
+        <version>0.0.4</version>
     </parent>
     <name>GRPC Tunnel Client Spring Boot Starter</name>
 
@@ -14,6 +14,15 @@
 
     <properties>
     </properties>
+
+    <url>https://github.com/redjujubetree/spring-grpc-tunnel</url>
+
+    <scm>
+        <connection>scm:git:https://github.com/redjujubetree/spring-grpc-tunnel.git</connection>
+        <developerConnection>scm:git:git@github.com:redjujubetree/spring-grpc-tunnel.git</developerConnection>
+        <url>https://github.com/redjujubetree/spring-grpc-tunnel</url>
+    </scm>
+
     <dependencies>
         <dependency>
             <groupId>top.redjujubetree</groupId>

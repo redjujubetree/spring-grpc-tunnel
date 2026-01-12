@@ -64,6 +64,5 @@ build/
 ### VS Code ###
 .vscode/
 .DS_Store
-/grpc-tunnel-common/src/main/proto/tunnel.proto
 CLAUDE.md
 /lightweight-queue

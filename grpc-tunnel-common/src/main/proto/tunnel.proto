@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package top.redjujubetree.tunnel.grpc;
+
+option java_multiple_files = true;
+option java_package = "top.redjujubetree.grpc.tunnel.proto";
+option java_outer_classname = "GrpcTunnelProto";
+
+/**
+ * common message structure
+ */
+message TunnelMessage {
+  string message_id = 1;
+  string client_id = 2;
+  MessageType type = 3;
+  int64 timestamp = 4;
+  RequestPayload request = 5;
+  ResponsePayload response = 6;
+  string correlation_id = 7;
+}
+
+/**
+ * message types for the tunnel
+ */
+enum MessageType {
+  SERVER_REQUEST = 0;
+  SERVER_RESPONSE = 1;
+  CLIENT_REQUEST = 2;
+  CLIENT_RESPONSE = 3;
+}
+
+/**
+ * basic request payload
+ */
+message RequestPayload {
+  string type = 1;
+  bytes data = 2;
+}
+
+/**
+ * basic response payload
+ */
+message ResponsePayload {
+  string type = 1;
+  int32 code = 2;
+  string message = 3;
+  bytes data = 4;
+}
+
+/**
+ * bidirectional streaming service for establishing a tunnel
+ */
+service GrpcTunnelService {
+  /**
+   * establish a tunnel with bidirectional streaming
+   */
+  rpc EstablishTunnel(stream TunnelMessage) returns (stream TunnelMessage);
+}
